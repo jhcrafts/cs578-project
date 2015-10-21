@@ -4,11 +4,12 @@
 
 
 import sys
-import math
+from math import *
 import copy
 import random
 import json
 import numpy as np
+
 ### main
 ### ----
 ### The main program loop
@@ -60,6 +61,72 @@ import numpy as np
 ##    def features(self):
 ##        return self.featureValues
 ##
+#%%
+def entropy(featurefreq,featuresubset,cuisinedict):
+
+    totalfeatures=set()
+    for subset in featuresubset: # gather all the feature in one set
+        totalfeatures=totalfeatures.union(set(subset))
+    totalfeatures=listodict(list(totalfeatures)) # turn it into a dict for indexing
+    entropy=np.zeros(len(totalfeatures))
+    for ingredient in totalfeatures:
+        totalfreq=0.
+        for cuis in cuisinedict:
+            i=cuisinedict[cuis]
+            try :
+                f=featurefreq[i][featuresubset[i][ingredient]]
+            except KeyError:
+                f=0.
+            totalfreq+=f
+        for cuis in cuisinedict:
+            i=cuisinedict[cuis]
+            try :
+                p=featurefreq[cuisinedict[i]][featuresubset[i][ingredient]]/totalfreq
+                entropy[totalfeatures[ingredient]]+= -p*log(p)
+            except KeyError:
+                pass
+    return(entropy,totalfeatures)
+#%%
+def completestat(examples):
+    """
+    Based on the examples computes the frequency of every ingredient for
+    for every type of cuisine it can be useful to compute entropy
+    the values are stored in numpy arrays
+    -featurefreq[cuisine][ingredient] = freq of that ingredient
+    indexed by
+    -dictionnary cuisinedict (type of cuisine :chinese mexican ...) returns
+    cuisine index
+    -dictionnaries featuresubset[i]=  the dictionnary of ingredients for
+    cuisine i  retunrs ingredient index
+    """
+    featuresubset=np.empty(20,dtype=object)
+    for i in range(len(featuresubset)):
+        featuresubset[i]=set()
+    cuisinedict={}
+    labels = set()
+    for example in examples:
+        if not(example["cuisine"] in labels): # to build the dictionnary index on the fly
+            labels.add(example["cuisine"])
+            cuisinedict[example["cuisine"]]=len(labels)-1
+        for ingredient in example["ingredients"]:
+            featuresubset[cuisinedict[example["cuisine"]]].add(ingredient)
+    featurefreq=np.empty(20,dtype=object)
+    for i,subset in enumerate(featuresubset):
+        featurefreq[i]=np.zeros(len(subset))
+        featuresubset[i]=listodict(list(subset))
+    for example in examples:
+        cuisine=cuisinedict[example["cuisine"]]
+        for ingredient in example["ingredients"]:
+            featurefreq[cuisine][featuresubset[cuisine][ingredient]]+=1
+    return(featurefreq,featuresubset,cuisinedict)
+#%%
+def listodict(lis):
+    dic=dict()
+    for i,word in enumerate(lis):
+        dic[word]=i
+    return(dic)
+#%%
+
 def debugprint(string):
     print("DEBUG: " + str(string))
 
@@ -92,9 +159,15 @@ def main():
     for cuisine in labels:
         print "Size of the",cuisine,"cuisine:",len(featuresubset[cuisinedict \
         [cuisine]])
+    #
+    comingredients=featuresubset[0]
 
-
+    for subset in featuresubset:
+        comingredients=set.intersection(comingredients,subset)
     debugprint(labels)
+    print " the ingredients you find everywhere are:"
+    print(comingredients)
+    featurefreq,featuresubset,cuisinedict=completestat(examples)
 
     # ====================================
     # WRITE CODE FOR YOUR EXPERIMENTS HERE
