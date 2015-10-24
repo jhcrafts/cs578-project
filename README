@@ -1,0 +1,13 @@
+# cs578-project
+Python Source Code and Data Set for CS578 Project
+
+#Running the Program
+Run the program with your Python 2.7 interpreter:
+
+python cs578project.py <args>
+
+#Program Arguments
+-f    Force Extraction of Feature Data
+-a    Algorithm 
+      1 Perceptron One Vs. All
+      2 Decision Tree
