@@ -1,4 +1,4 @@
-# CS578 Project
+﻿# CS578 Project
 # Francois Sanson
 # Jordan Crafts
 
@@ -15,25 +15,39 @@ import numpy as np
 ### The main program loop
 ### You should modify this function to run your experiments
 ##
-##def parseArgs(args):
-##  """Parses arguments vector, looking for switches of the form -key {optional value}.
-##  For example:
-##    parseArgs([ 'main.py', '-p', 5 ]) = {'-p':5 }"""
-##  args_map = {}
-##  curkey = None
-##  for i in xrange(1, len(args)):
-##    if args[i][0] == '-':
-##      args_map[args[i]] = True
-##      curkey = args[i]
-##    else:
-##      assert curkey
-##      args_map[curkey] = args[i]
-##      curkey = None
-##  return args_map
-##
-##def validateInput(args):
-##    pass
-##    return
+def parseArgs(args):
+  """Parses arguments vector, looking for switches of the form -key {optional value}.
+  For example:
+	parseArgs([ 'template.py', '-a', 1, '-i', 10, '-f', 1 ]) = {'-t':1, '-i':10, '-f':1 }"""
+  args_map = {}
+  curkey = None
+  for i in xrange(1, len(args)):
+    if args[i][0] == '-':
+      args_map[args[i]] = True
+      curkey = args[i]
+    else:
+      assert curkey
+      args_map[curkey] = args[i]
+      curkey = None
+  return args_map
+
+def validateInput(args):
+    args_map = parseArgs(args)
+
+    algorithm = 1 # 1: Perceptron OVA, 2: Decision Tree    
+    forcefeatureextraction = False
+    printtrainingdatastats = False    
+
+    if '-a' in args_map:
+      algorithm = int(args_map['-a'])    
+    if '-f' in args_map:
+      forcefeatureextraction = True
+    if '-d' in args_map:
+      printtrainingdatastats = True
+
+    assert algorithm in [1, 2]
+
+    return [algorithm, forcefeatureextraction, printtrainingdatastats]
 ##
 ##class Example:
 ##    'Class to encapsulate data examples'
@@ -139,14 +153,10 @@ def listodict(lis):
 def debugprint(string):
     print("DEBUG: " + str(string))
 
-
-def main():
-    # Read in the data file
-    trainingdata = open("train.json")
-    examples = json.load(trainingdata)
+def printtrainingdatastats(examples):    
     featuresubset=np.empty(20,dtype=object)
     for i in range(len(featuresubset)):
-        featuresubset[i]=set()
+        featuresubset[i]=set()    
     cuisinedict={}
     featureset = set()
     labels = set()
@@ -178,6 +188,18 @@ def main():
     print(comingredients)
     featurefreq,featuresubset,cuisinedict=completestat(examples)
     entr,entrdict=entropy(featurefreq,featuresubset,cuisinedict)
+
+
+def main():
+    arguments = validateInput(sys.argv)
+    algorithm,featurextraction,printtrainingstats = arguments
+
+    # Read in the data file
+    trainingdata = open("train.json")
+    examples = json.load(trainingdata)
+
+    if (printtrainingstats):
+        printtrainingdatastats(examples)
 
     # ====================================
     # WRITE CODE FOR YOUR EXPERIMENTS HERE
