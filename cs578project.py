@@ -63,7 +63,13 @@ import numpy as np
 ##
 #%%
 def entropy(featurefreq,featuresubset,cuisinedict):
-
+    """
+    Computes the entropy for every ingredient the smaller the entropy the more
+    information gain for that ingredient
+    returns
+    - a numpy array entropy with numerical values
+    - a dictionnary used to index the ingredients
+    """
     totalfeatures=set()
     for subset in featuresubset: # gather all the feature in one set
         totalfeatures=totalfeatures.union(set(subset))
@@ -78,19 +84,22 @@ def entropy(featurefreq,featuresubset,cuisinedict):
             except KeyError:
                 f=0.
             totalfreq+=f
+        count=0
         for cuis in cuisinedict:
             i=cuisinedict[cuis]
             try :
-                p=featurefreq[cuisinedict[i]][featuresubset[i][ingredient]]/totalfreq
+                p=featurefreq[i][featuresubset[i][ingredient]]/totalfreq
                 entropy[totalfeatures[ingredient]]+= -p*log(p)
             except KeyError:
-                pass
+                count+=1
+        if (count==20):
+            print('arg!')
     return(entropy,totalfeatures)
 #%%
 def completestat(examples):
     """
-    Based on the examples computes the frequency of every ingredient for
-    for every type of cuisine it can be useful to compute entropy
+    Based on the examples, computes the frequency of every ingredient for
+    for every type of cuisine. It can be useful in order to compute entropy
     the values are stored in numpy arrays
     -featurefreq[cuisine][ingredient] = freq of that ingredient
     indexed by
@@ -117,7 +126,7 @@ def completestat(examples):
     for example in examples:
         cuisine=cuisinedict[example["cuisine"]]
         for ingredient in example["ingredients"]:
-            featurefreq[cuisine][featuresubset[cuisine][ingredient]]+=1
+            featurefreq[cuisine][featuresubset[cuisine][ingredient]]+=1.
     return(featurefreq,featuresubset,cuisinedict)
 #%%
 def listodict(lis):
@@ -168,6 +177,7 @@ def main():
     print " the ingredients you find everywhere are:"
     print(comingredients)
     featurefreq,featuresubset,cuisinedict=completestat(examples)
+    entr,entrdict=entropy(featurefreq,featuresubset,cuisinedict)
 
     # ====================================
     # WRITE CODE FOR YOUR EXPERIMENTS HERE
