@@ -3,7 +3,7 @@
 class Algorithm(object):
     "Abstract Base Class for Algorithm Classes"
     __metaclass__ = ABCMeta
-
+        
     @abstractmethod
     def train(self,trainingexamples):
         pass
