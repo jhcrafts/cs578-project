@@ -34,12 +34,12 @@ def parseArgs(args):
 def validateInput(args):
     args_map = parseArgs(args)
 
-    algorithm = 1 # 1: Perceptron OVA, 2: Decision Tree    
+    algorithm = 1 # 1: Perceptron OVA, 2: Decision Tree
     forcefeatureextraction = False
-    printtrainingdatastats = False    
+    printtrainingdatastats = False
 
     if '-a' in args_map:
-      algorithm = int(args_map['-a'])    
+      algorithm = int(args_map['-a'])
     if '-f' in args_map:
       forcefeatureextraction = True
     if '-d' in args_map:
@@ -80,7 +80,14 @@ def entropy(featurefreq,featuresubset,cuisinedict):
     """
     Computes the entropy for every ingredient the smaller the entropy the more
     information gain for that ingredient
-    returns
+    inputs:
+    -the feature freq per cuisine : featurefreq[cuisine][ingredient] (np array)
+    = freq of that ingredient  indexed  by dictionnary cuisinedict
+    (type of cuisine :chinese mexican ...)
+    -dictionnary cuisinedict (type of cuisine :chinese mexican ...)
+    -dictionnaries featuresubset[i]=  the dictionnary of ingredients for
+    cuisine i  retunrs ingredient index
+    outputs:
     - a numpy array entropy with numerical values
     - a dictionnary used to index the ingredients
     """
@@ -153,10 +160,10 @@ def listodict(lis):
 def debugprint(string):
     print("DEBUG: " + str(string))
 
-def printtrainingdatastats(examples):    
+def printtrainingdatastats(examples):
     featuresubset=np.empty(20,dtype=object)
     for i in range(len(featuresubset)):
-        featuresubset[i]=set()    
+        featuresubset[i]=set()
     cuisinedict={}
     featureset = set()
     labels = set()
