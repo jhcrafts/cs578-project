@@ -9,6 +9,8 @@ import copy
 import random
 import json
 import numpy as np
+import csv
+import os
 
 ### main
 ### ----
@@ -48,6 +50,96 @@ def validateInput(args):
     assert algorithm in [1, 2]
 
     return [algorithm, forcefeatureextraction, printtrainingdatastats]
+
+##### Begin JHC Code
+##predict a single example
+def predict_one(weights, example,threshold):
+    dotproduct = 0.0
+    for i in range(1,len(example),1):
+        dotproduct += weights[example[i]]
+    return -1 if dotproduct <= threshold else 1
+
+def predictperceptronprimal(weights,bias,example):
+    return predict_one(weights,example,0.0-bias)
+
+def predictwinnow(weights,bias,example):
+    return predict_one(weights,example,len(weights))
+
+def predictperceptronaverage(weights,bias,example):
+    return predict_one(weights,example,0.0-bias)
+
+##Perceptron
+#-----------
+def perceptronprimal(maxIterations, ngrams, trainingdata):
+    weights = [0.0]*len(ngrams)    
+    bias = 0
+    iterations = 0.0
+    for i in range(maxIterations):      
+        iterations += 1
+        exampleswithoutmistake = 0
+        for example in trainingdata:
+            sign = int(example[0]);
+            dotproduct = 0
+            for j in range(1,len(example),1):
+                dotproduct += weights[example[j]]
+            if (sign*(dotproduct + bias) <= 0):
+                # mistake!
+                exampleswithoutmistake = 0
+                for k in range(1,len(example),1):
+                    weights[example[k]] += sign
+                bias += sign
+            else:
+                exampleswithoutmistake += 1
+        if (exampleswithoutmistake >= len(trainingdata)):
+            break
+    return weights, bias, iterations
+
+##Perceptron Dual
+#-------
+def perceptronaverage(maxIterations, ngrams, trainingdata):
+    weights = [0.0]*len(ngrams)
+    bias = 0.0
+    cachedweights = [0.0]*len(ngrams)
+    cachedbias = 0.0
+    c = 1.0    
+    iterations = 0.0
+    for i in range(maxIterations):      
+        iterations += 1
+        exampleswithoutmistake = 0
+        for example in trainingdata:
+            sign = int(example[0]);
+            dotproduct = 0
+            for j in range(1,len(example),1):
+                dotproduct += weights[example[j]]
+            if (sign*(dotproduct + bias) <= 0):
+                # mistake!
+                exampleswithoutmistake = 0
+                for k in range(1,len(example),1):
+                    weights[example[k]] += sign
+                    cachedweights[example[k]] += (sign*c)
+                bias += sign
+                cachedbias += c*sign
+            else:
+                exampleswithoutmistake += 1
+            c += 1.0
+        if (exampleswithoutmistake >= len(trainingdata)):
+            break 
+    retweights = copy.deepcopy(cachedweights)
+    for i in range(len(retweights)):
+        retweights[i] = weights[i] - retweights[i]/c
+    retbias = bias - (cachedbias/c)
+    return retweights,retbias,iterations
+
+def runperceptronOVA(trainingexamples):
+    trainingaccuracy = 0.0
+    return trainingaccuracy
+##### End JHC Code
+
+##### Begin FS Code
+def rundecisiontree(trainingexamples):
+    trainingaccuracy = 0.0
+    return trainingaccuracy
+##### End Fs Code
 ##
 ##class Example:
 ##    'Class to encapsulate data examples'
@@ -183,17 +275,46 @@ def printtrainingdatastats(examples):
 def main():
     arguments = validateInput(sys.argv)
     algorithm,featurextraction,printtrainingstats = arguments
+    # 1: Perceptron OVA, 2: Decision Tree  
+    algorithms = { 1 : runperceptronOVA, 2 : rundecisiontree }
+    algorithmnames = {1 : "Perceptron One vs. All", 2 : "Decision Tree"}
+
 
     # Read in the data file
     trainingdata = open("train.json")
-    examples = json.load(trainingdata)
-
+    trainingexamples = json.load(trainingdata)
+    
     if (printtrainingstats):
-        printtrainingdatastats(examples)
+        printtrainingdatastats(trainingexamples)
 
-    # ====================================
-    # WRITE CODE FOR YOUR EXPERIMENTS HERE
-    # ====================================
+    import cProfile, pstats, StringIO
+    
+    ## FRANCOIS - I think that eventually we might like a common 
+    ## routine for extracting features from the training data.  For
+    ## the moment, I'm extracting the features that I need for 
+    ## Perceptron OVA in the algorithm routine itself.
+        
+    ##### BEGIN Algorithm Execution #####
+    pr = cProfile.Profile()
+    pr.enable()
+
+    ## FRANCOIS - For the moment, I'm just passing in the training
+    ## examples and getting the training accuracy.  Since we'll likely
+    ## be terrible initially, I figured test statistics aren't all that
+    ## helpful.  
+    trainingaccuracy = algorithms[algorithm](trainingexamples)   
+
+    pr.disable()
+    s = StringIO.StringIO()
+    sortby = 'cumulative'
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    print("ALGORITHM EXECUTION RUNTIME STATISTICS:")
+    ps.print_stats()
+    stats = s.getvalue()
+    ##### END Algorithm Execution #####
+
+    print("Algorithm:            " + algorithmnames[algorithm])
+    print("Training Accuracy:    " + str(trainingaccuracy))
 
 if __name__ == '__main__':
     main()
