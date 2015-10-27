@@ -12,46 +12,10 @@ import numpy as np
 import csv
 import os
 
-### main
-### ----
-### The main program loop
-### You should modify this function to run your experiments
-##
-def parseArgs(args):
-  """Parses arguments vector, looking for switches of the form -key {optional value}.
-  For example:
-	parseArgs([ 'template.py', '-a', 1, '-i', 10, '-f', 1 ]) = {'-t':1, '-i':10, '-f':1 }"""
-  args_map = {}
-  curkey = None
-  for i in xrange(1, len(args)):
-    if args[i][0] == '-':
-      args_map[args[i]] = True
-      curkey = args[i]
-    else:
-      assert curkey
-      args_map[curkey] = args[i]
-      curkey = None
-  return args_map
+import alg_perceptronOVA as PerceptronOVA
+import alg_decisiontree as DecisionTree
 
-def validateInput(args):
-    args_map = parseArgs(args)
-
-    algorithm = 1 # 1: Perceptron OVA, 2: Decision Tree    
-    forcefeatureextraction = False
-    printtrainingdatastats = False    
-
-    if '-a' in args_map:
-      algorithm = int(args_map['-a'])    
-    if '-f' in args_map:
-      forcefeatureextraction = True
-    if '-d' in args_map:
-      printtrainingdatastats = True
-
-    assert algorithm in [1, 2]
-
-    return [algorithm, forcefeatureextraction, printtrainingdatastats]
-
-##### Begin JHC Code
+##### BEGIN JHC Code
 ##predict a single example
 def predict_one(weights, example,threshold):
     dotproduct = 0.0
@@ -133,13 +97,13 @@ def perceptronaverage(maxIterations, ngrams, trainingdata):
 def runperceptronOVA(trainingexamples):
     trainingaccuracy = 0.0
     return trainingaccuracy
-##### End JHC Code
+##### END JHC Code
 
-##### Begin FS Code
+##### BEGIN FS Code
 def rundecisiontree(trainingexamples):
     trainingaccuracy = 0.0
     return trainingaccuracy
-##### End Fs Code
+##### END FS Code
 ##
 ##class Example:
 ##    'Class to encapsulate data examples'
@@ -271,14 +235,55 @@ def printtrainingdatastats(examples):
     print(comingredients)
     featurefreq,featuresubset,cuisinedict=completestat(examples)
 
+### main
+### ----
+### The main program loop
+### You should modify this function to run your experiments
+##
+def parseArgs(args):
+  """Parses arguments vector, looking for switches of the form -key {optional value}.
+  For example:
+	parseArgs([ 'template.py', '-a', 1, '-i', 10, '-f', 1 ]) = {'-t':1, '-i':10, '-f':1 }"""
+  args_map = {}
+  curkey = None
+  for i in xrange(1, len(args)):
+    if args[i][0] == '-':
+      args_map[args[i]] = True
+      curkey = args[i]
+    else:
+      assert curkey
+      args_map[curkey] = args[i]
+      curkey = None
+  return args_map
+
+def validateInput(args):
+    args_map = parseArgs(args)
+
+    algorithm = 1 # 1: Perceptron OVA, 2: Decision Tree    
+    forcefeatureextraction = False
+    printtrainingdatastats = False    
+
+    if '-a' in args_map:
+      algorithm = int(args_map['-a'])    
+    if '-f' in args_map:
+      forcefeatureextraction = True
+    if '-d' in args_map:
+      printtrainingdatastats = True
+
+    assert algorithm in [1, 2]
+
+    return [algorithm, forcefeatureextraction, printtrainingdatastats]
 
 def main():
     arguments = validateInput(sys.argv)
     algorithm,featurextraction,printtrainingstats = arguments
     # 1: Perceptron OVA, 2: Decision Tree  
-    algorithms = { 1 : runperceptronOVA, 2 : rundecisiontree }
-    algorithmnames = {1 : "Perceptron One vs. All", 2 : "Decision Tree"}
+    algorithms = { 
+        1 : PerceptronOVA.AlgPerceptronOVA(), 
+        2 : DecisionTree.AlgDecisionTree() 
+        }
 
+    classifier = algorithms[algorithm]
 
     # Read in the data file
     trainingdata = open("train.json")
@@ -298,23 +303,22 @@ def main():
     pr = cProfile.Profile()
     pr.enable()
 
-    ## FRANCOIS - For the moment, I'm just passing in the training
-    ## examples and getting the training accuracy.  Since we'll likely
-    ## be terrible initially, I figured test statistics aren't all that
-    ## helpful.  
-    trainingaccuracy = algorithms[algorithm](trainingexamples)   
+    ## FRANCOIS - I've updated this to train the classifier and then we can run
+    ## whatever statistics we want by using the predict routine of the base
+    ## class.  I figured this would be a bit more portable and easy to augment.  
+    classifier.train(trainingexamples)   
 
     pr.disable()
     s = StringIO.StringIO()
     sortby = 'cumulative'
     ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-    print("ALGORITHM EXECUTION RUNTIME STATISTICS:")
+    print("CLASSIFIER TRAINING RUNTIME STATISTICS:")
     ps.print_stats()
     stats = s.getvalue()
     ##### END Algorithm Execution #####
 
-    print("Algorithm:            " + algorithmnames[algorithm])
-    print("Training Accuracy:    " + str(trainingaccuracy))
+    print("Algorithm:            " + classifier.name())
+    print("Training Accuracy:    " + str(0.0))
 
 if __name__ == '__main__':
     main()
