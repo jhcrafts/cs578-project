@@ -110,18 +110,20 @@ def subtree(featurefreq,featuresubset,cuisinedict,cuisine,max_depth=9,mingain=0)
             else:
                 tree[i+1]=subtree(data,attributes,max_depth)
     return(tree)
+
+#%%
+def searchdict(index,dic):
+    for attribute,key in dic.iteritems():
+        if key==index:
+            return(attribute)
+    return(1)
 #%%
 
 def best_choice(featurefreq,featuresubset,cuisinedict,cuisine):
-    entropy_gain=np.zeros(len(attributes))
-    for i in range(len(attributes)):
-        t=threshold_optimize(dataset,i)
-        entropy_gain[i]=entropygain(dataset,i,t)
-    index_best=np.argmax(entropy_gain)
-    gain=max(entropy_gain)
-    t=threshold_optimize(dataset,index_best)
-    best_attribute=attributes[index_best]
-    return(best_attribute,index_best,t,gain)
+    entropy_gain,totalfeatures=entropy(featurefreq,featuresubset,cuisinedict)
+    index=np.argmin(entropy_gain)
+    best_attribute=searchdict(index,totalfeatures)
+    return(best_attribute,index,t,gain)
 
 def random_choice(attributes,dataset,t):
     index_best=int(np.random.uniform(0,len(attributes)))
