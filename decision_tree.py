@@ -21,14 +21,15 @@ def entropy(featurefreq,featuresubset,cuisinedict):
     -dictionnaries featuresubset[i]=  the dictionnary of ingredients for
     cuisine i  retunrs ingredient index
     outputs:
-    - a numpy array entropy with numerical values
-    - a dictionnary used to index the ingredients
+    - a numpy array entropy with numerical values (keep featuresubsert as index)
+    - totalfreq indorder to take only frequent word
     """
-    totalfeatures=set()
-    for subset in featuresubset: # gather all the feature in one set
-        totalfeatures=totalfeatures.union(set(subset))
-    totalfeatures=listodict(list(totalfeatures)) # turn it into a dict for indexing
-    entropy=np.zeros(len(totalfeatures))
+    entropy=np.empty(20,dtype='object')
+    frequency=np.empty(20,dtype='object')
+    for i,subset in enumerate(featuresubset): # gather all the feature in one set
+        entropy[i]=np.zeros(len(subset))
+        frequency[i]=np.zeros(len(subset))
+#    totalfeatures=listodict(list(totalfeatures)) # turn it into a dict for indexing
     for ingredient in totalfeatures:
         totalfreq=0.
         for cuis in cuisinedict:
@@ -43,12 +44,13 @@ def entropy(featurefreq,featuresubset,cuisinedict):
             i=cuisinedict[cuis]
             try :
                 p=featurefreq[i][featuresubset[i][ingredient]]/totalfreq
-                entropy[totalfeatures[ingredient]]+= -p*log(p)
+                entropy[i][featuresubset[i][ingredient]]+= -p*log(p)
+                frequency[i][featuresubset[i][ingredient]]=totalfreq
             except KeyError:
                 count+=1
         if (count==20):
             print('arg!')
-    return(entropy,totalfeatures)
+    return(entropy,frequency)
 #%%
 def classify(decisionTree, example):
     currentnode=decisionTree
@@ -121,7 +123,7 @@ def searchdict(index,dic):
 
 def best_choice(featurefreq,featuresubset,cuisinedict,cuisine):
     entropy_gain,totalfeatures=entropy(featurefreq,featuresubset,cuisinedict)
-    index=np.argmin(entropy_gain)
+    index=np.argmin(entropy_gain[cuisinedict[cuisine]][frequency[cuisine][:]>20])
     best_attribute=searchdict(index,totalfeatures)
     return(best_attribute,index,t,gain)
 
@@ -156,10 +158,10 @@ def threshold_optimize(dataset,attribute_index):
 #        print(entropygain(dataset,attribute_index,t1))
  #   print(t1)
     return(t1)
-
+#%%
 
  #%%
-def majorityvote(dataset):
+def majorityvote(featurefreq,featuresubset,cuisinedict,cuisine):
     #takes the majority vote of a set
     if (dataset.shape[1]<=1):
         if (np.sum(dataset)>len(dataset)/2):
