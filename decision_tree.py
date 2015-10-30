@@ -98,7 +98,7 @@ def decomposdata(examples):
             featurefreq[cuisine][featuresubset[cuisine][ingredient]]+=1.
     return(featurefreq,featuresubset,cuisinedict)
 #%%
-def subtree(dataset,max_depth=9,mingain=0):
+def subtree(dataset,pastingredients=[],max_depth=9,mingain=0):
     """
     Fundamental dexision tree learning function
     inputs:
@@ -108,30 +108,31 @@ def subtree(dataset,max_depth=9,mingain=0):
     -separated datasets
 
     """
-    if (featuresubset==[]):
+    if (dataset==[]):
         #make sure the dataset is not empty (I can't imagine this happening in practise)
-        return(featuresubset)
+        return(0.)
     else:
-        tree=np.empty(4,dtype='object')
-        featurefreq,featuresubset,cuisinedict=decomposdata(dataset)
-        best_attribute,index_best=best_choice(featurefreq,featuresubset,cuisinedict,cuisine)
-        tree[0]=best_attribute
+        tree=np.empty(3,dtype='object') #node
+        ingredient,index_best,gain=best_choice(dataset,pastingredients,cuisine)
+        # choice of the ingredient
+        tree[0]=ingredient
         #split the dataset
-
-        temp=np.delete(np.arange(dataset.shape[1]),index_best,0)
+        datasetwith,datasetwithout=split(dataset,ingredient)
+        pastingredients.add(ingredient)
         datasets=np.empty(2,dtype='object')
-        datasets[0]=dataset[dataset[:,index_best]<=t][:,temp]
-        datasets[1]=dataset[dataset[:,index_best]>t][:,temp]
-        tree[3]=t
+        datasets[0]=datasetwith
+        datasets[1]=datasetwithout
         for i,data in enumerate(datasets):
+            #stopping condition
             if(attributes.shape[0]<10-max_depth):
                 tree[i+1]=majorityvote(data)
-            elif (data.shape[0]==0):
+            elif (data==[]):
                 tree[i+1]=majorityvote(dataset)
             elif(gain<=mingain):
                 tree[i+1]=majorityvote(dataset)
             else:
-                tree[i+1]=subtree(data,attributes,max_depth)
+                #extra iteration
+                tree[i+1]=subtree(data,pastingredients,max_depth)
     return(tree)
 
 #%%
@@ -142,12 +143,16 @@ def searchdict(index,dic):
     return(1)
 #%%
 
-def best_choice(featurefreq,featuresubset,cuisinedict,cuisine):
+def best_choice(dataset,pastingredients,cuisine):
+    """
+    Chooses the best ingredient
+    """
+    featurefreq,featuresubset,cuisinedict=decomposdata(dataset) # make the data readable
     entropy_gain,frequency=entropy(featurefreq,featuresubset,cuisinedict)
     index=np.argmin(entropy_gain[cuisinedict[cuisine]][frequency[cuisinedict[cuisine]]>20])
     best_attribute=searchdict(index,featuresubset[cuisinedict[cuisine]])
     print(best_attribute)
-    return(best_attribute,index,)
+    return(best_attribute,index)
 
 def random_choice(attributes,dataset,t):
     index_best=int(np.random.uniform(0,len(attributes)))
@@ -190,15 +195,17 @@ def split(dataset,ingredient):
            datasetwithout.remove(recipe)
     return (datasetwith,datasetwithout)
  #%%
-def majorityvote(featurefreq,featuresubset,cuisinedict,cuisine):
-    #takes the majority vote of a set
-    if (dataset.shape[1]<=1):
-        if (np.sum(dataset)>len(dataset)/2):
-            return(1.)
-        else:
-            return(0.)
+def majorityvote(dataset,cuisine):
+    """
+    takes the majority vote of a set
+    1: the cuisine dominates
+    0.: the other cuisines dominate
+    """
+    vote=0.
+    for recipe in dataset:
+        if recipe['cuisine']==cuisine:
+            vote+=1
+    if vote>len(dataset)/2:
+        return(1.)
     else:
-        if (np.sum(dataset[:,-1])>len(dataset[:,-1])/2):
-            return(1.)
-        else:
-            return(0.)
+        return(0.)
