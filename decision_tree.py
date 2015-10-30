@@ -77,6 +77,7 @@ def decomposdata(examples):
     cuisine i  retunrs ingredient index
     """
     featuresubset=np.empty(20,dtype=object)
+    #feature subset: np array of sets of the ingredient of each cuisine
     for i in range(len(featuresubset)):
         featuresubset[i]=set()
     cuisinedict={}
@@ -98,6 +99,15 @@ def decomposdata(examples):
     return(featurefreq,featuresubset,cuisinedict)
 #%%
 def subtree(dataset,max_depth=9,mingain=0):
+    """
+    Fundamental dexision tree learning function
+    inputs:
+    -dataset to split
+    outputs:
+    -np array of the node with the attribute we split on
+    -separated datasets
+
+    """
     if (featuresubset==[]):
         #make sure the dataset is not empty (I can't imagine this happening in practise)
         return(featuresubset)
@@ -171,10 +181,14 @@ def threshold_optimize(dataset,attribute_index):
  #   print(t1)
     return(t1)
 #%%
-def split(featuresubset,cuisinedict,cuisine,ingredient):
-    for i,cuis in enumerate(cusisinedict):
-       del featuresubset[i][ingredient]
-    return (featuresubset,cuisinedict,cuisine,ingredient)
+def split(dataset,ingredient):
+    datasetwith=list()
+    datasetwithout=dataset
+    for recipe in dataset:
+       if ingredient in recipe['ingredient']:
+           datasetwith.add(recipe)
+           datasetwithout.remove(recipe)
+    return (datasetwith,datasetwithout)
  #%%
 def majorityvote(featurefreq,featuresubset,cuisinedict,cuisine):
     #takes the majority vote of a set
