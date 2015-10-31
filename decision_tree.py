@@ -68,18 +68,6 @@ def entropy(featurefreq,featuresubset,cuisinedict):
             print('arg!')
     return(entropy,frequency)
 #%%
-def classify(decisionTree, example):
-    currentnode=decisionTree
-    while not(isinstance(currentnode,float) or isinstance(currentnode,int) ):
-        attribute=currentnode[0]
-        t=currentnode[3]
-        score=example[attribute]
-        if (score<=t):
-            currentnode=currentnode[1]
-        if (score>t):
-            currentnode=currentnode[2]
-    return(currentnode)
-#%%
 def decomposdata(examples):
     """
     Based on the examples, computes the frequency of every ingredient for
@@ -175,37 +163,6 @@ def best_choice(dataset,pastingredients,cuisine):
     print(best_attribute)
     return(best_attribute,index)
 
-def random_choice(attributes,dataset,t):
-    index_best=int(np.random.uniform(0,len(attributes)))
-    best_attribute=attributes[index_best]
-    return(best_attribute,index_best)
-
-#%%
-def threshold_optimize(dataset,attribute_index):
-    # find the best threshold to optimze entropy gain
-    t=np.mean(dataset[:,attribute_index])
-    t=np.random.uniform(10)
-  #  t=10.*(np.sum(dataset[:,-1])*1./len(dataset[:,-1]))
-    t=5.
-    #bissection method
-    t1=5.
-    i=0
-#    print('new iteration')
-#    print(entropygain(dataset,attribute_index,t1))
-    while(i<5):
-        r1=entropygain(dataset,attribute_index,t1)
-        r2=entropygain(dataset,attribute_index,t1-1)
-        r3=entropygain(dataset,attribute_index,t1+1)
-        if r2==max(r1,r2,r3):
-            t1=t1-1
-        elif r3==max(r1,r2,r3):
-            t1=t1+1
-        else:
-            pass
-        i=i+1
-#        print(entropygain(dataset,attribute_index,t1))
- #   print(t1)
-    return(t1)
 #%%
 def split(dataset,ingred):
     datasetwith=list()
@@ -233,6 +190,7 @@ def majorityvote(dataset,cuisine):
     else:
         return(0.)
 #%%
+        ## Test
 trainingdata = open("train.json")
 examples = json.load(trainingdata)
 cuisine='italian'
