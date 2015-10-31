@@ -7,7 +7,7 @@ Created on Mon Oct 26 19:59:36 2015
 Build decision trees:
 Does this recipe belong to that cuisine ?
 """
-
+from copy import *
 #%%
 def entropy(featurefreq,featuresubset,cuisinedict):
     """
@@ -30,6 +30,9 @@ def entropy(featurefreq,featuresubset,cuisinedict):
         entropy[i]=np.zeros(len(subset))
         frequency[i]=np.zeros(len(subset))
 #    totalfeatures=listodict(list(totalfeatures)) # turn it into a dict for indexing
+    totalfeatures=set()
+    for i in range(20):
+        totalfeatures=totalfeatures.union(featuresubset[i])
     for ingredient in totalfeatures:
         totalfreq=0.
         for cuis in cuisinedict:
@@ -98,7 +101,7 @@ def decomposdata(examples):
             featurefreq[cuisine][featuresubset[cuisine][ingredient]]+=1.
     return(featurefreq,featuresubset,cuisinedict)
 #%%
-def subtree(dataset,pastingredients=[],max_depth=9,mingain=0):
+def subtree(dataset,cuisine,pastingredients=[],max_depth=9,mingain=-1):
     """
     Fundamental dexision tree learning function
     inputs:
@@ -113,26 +116,28 @@ def subtree(dataset,pastingredients=[],max_depth=9,mingain=0):
         return(0.)
     else:
         tree=np.empty(3,dtype='object') #node
-        ingredient,index_best,gain=best_choice(dataset,pastingredients,cuisine)
+        ingredient,gain=best_choice(dataset,pastingredients,cuisine)
+        if ingredient==1:
+            return(0)
         # choice of the ingredient
         tree[0]=ingredient
         #split the dataset
         datasetwith,datasetwithout=split(dataset,ingredient)
-        pastingredients.add(ingredient)
+        pastingredients+=[ingredient]
         datasets=np.empty(2,dtype='object')
         datasets[0]=datasetwith
         datasets[1]=datasetwithout
         for i,data in enumerate(datasets):
             #stopping condition
-            if(attributes.shape[0]<10-max_depth):
-                tree[i+1]=majorityvote(data)
+            if(len(pastingredients)>max_depth):
+                tree[i+1]=majorityvote(data,cuisine)
             elif (data==[]):
-                tree[i+1]=majorityvote(dataset)
+                tree[i+1]=majorityvote(dataset,cuisine)
             elif(gain<=mingain):
-                tree[i+1]=majorityvote(dataset)
+                tree[i+1]=majorityvote(dataset,cuisine)
             else:
                 #extra iteration
-                tree[i+1]=subtree(data,pastingredients,max_depth)
+                tree[i+1]=subtree(data,cuisine,pastingredients,max_depth)
     return(tree)
 
 #%%
@@ -149,7 +154,10 @@ def best_choice(dataset,pastingredients,cuisine):
     """
     featurefreq,featuresubset,cuisinedict=decomposdata(dataset) # make the data readable
     entropy_gain,frequency=entropy(featurefreq,featuresubset,cuisinedict)
-    index=np.argmin(entropy_gain[cuisinedict[cuisine]][frequency[cuisinedict[cuisine]]>20])
+    try:
+        index=np.argmin(entropy_gain[cuisinedict[cuisine]][frequency[cuisinedict[cuisine]]>20])
+    except (ValueError,KeyError):
+        return(1,-10)
     best_attribute=searchdict(index,featuresubset[cuisinedict[cuisine]])
     print(best_attribute)
     return(best_attribute,index)
@@ -186,12 +194,14 @@ def threshold_optimize(dataset,attribute_index):
  #   print(t1)
     return(t1)
 #%%
-def split(dataset,ingredient):
+def split(dataset,ingred):
     datasetwith=list()
-    datasetwithout=dataset
+    datasetwithout=deepcopy(dataset)
+    a=[1]
     for recipe in dataset:
-       if ingredient in recipe['ingredient']:
-           datasetwith.add(recipe)
+       if ingred in recipe['ingredients']:
+           a[0]=recipe
+           datasetwith+=a
            datasetwithout.remove(recipe)
     return (datasetwith,datasetwithout)
  #%%
@@ -209,3 +219,5 @@ def majorityvote(dataset,cuisine):
         return(1.)
     else:
         return(0.)
+#%%
+tree=subtree(examples,'french')
