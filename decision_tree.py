@@ -8,6 +8,19 @@ Build decision trees:
 Does this recipe belong to that cuisine ?
 """
 from copy import *
+import numpy as np
+import json
+from cs578project import *
+#%%
+def predict_one(recipe,tree):
+    currentnode=tree
+    while not(isinstance(currentnode,float) or isinstance(currentnode,int) ):
+        attribute=currentnode[0]
+        if attribute in recipe['ingredients']:
+            currentnode=currentnode[1]
+        else:
+            currentnode=currentnode[2]
+    return(currentnode)
 #%%
 def entropy(featurefreq,featuresubset,cuisinedict):
     """
@@ -220,4 +233,17 @@ def majorityvote(dataset,cuisine):
     else:
         return(0.)
 #%%
-tree=subtree(examples,'french')
+trainingdata = open("train.json")
+examples = json.load(trainingdata)
+cuisine='italian'
+tree=subtree(examples,cuisine)
+error=0.
+for recipe in examples:
+    pred=predict_one(recipe,tree)
+    if (int(pred)==1 and recipe['cuisine']!=cuisine):
+        print('negative error' )
+        error+=1
+    if (int(pred)==0 and recipe['cuisine']==cuisine):
+        print('positive error' )
+        error+=1
+print('error:',error*1./len(examples))
