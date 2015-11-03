@@ -149,6 +149,7 @@ def searchdict(index,dic):
     return(1)
 #%%
 
+
 def best_choice(dataset,pastingredients,cuisine):
     """
     Chooses the best ingredient
@@ -162,6 +163,30 @@ def best_choice(dataset,pastingredients,cuisine):
     best_attribute=searchdict(index,featuresubset[cuisinedict[cuisine]])
     print(best_attribute)
     return(best_attribute,index)
+#%%
+def entropygain(dataset,attribute,cuisine):
+    if dataset==[]:
+        return(0)
+    else:
+        for recipe in dataset:
+            if (attribute in recipe['ingredient'] and recipe['cuisine']==cuisine):
+                positivein+=1.
+            if (attribute in recipe['ingredient'] and recipe['cuisine']!=cuisine):
+                negativein+=1.
+            if (not(attribute in recipe['ingredient']) and recipe['cuisine']==cuisine):
+                positiveout+=1.
+            if (not(attribute in recipe['ingredient']) and recipe['cuisine']!=cuisine):
+                negativeout+=1.
+        p_positive=positivein/(positivein+negativein)
+        p_negative=negativein/(positivein+negativein)
+        entropy[0]= -p_positive*np.log(p_positive)-p_negatif*np.log(p_negatif))
+        p_positive=positiveout/(positiveout+negativeout)
+        p_negative=negativeout/(positiveout+negativeout)
+        entropy[1]= -p_positive*np.log(p_positive)-p_negatif*np.log(p_negatif))
+        entropy[np.isnan(entropy)]=0.
+        gen_entropy=entropy[0]*(positivein+negativein)/len(dataset) \
+        +entropy[1]*(positiveout+negativeout)/len(dataset)
+    return(gen_entropy)
 
 #%%
 def split(dataset,ingred):
