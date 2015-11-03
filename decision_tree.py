@@ -21,8 +21,8 @@ def predict_one(recipe,tree):
         else:
             currentnode=currentnode[2]
     return(currentnode)
-#%%
-def entropy(featurefreq,featuresubset,cuisinedict):
+##%%
+def generalentropy(featurefreq,featuresubset,cuisinedict):
     """
     Computes the entropy for every ingredient the smaller the entropy the more
     information gain for that ingredient
@@ -155,37 +155,48 @@ def best_choice(dataset,pastingredients,cuisine):
     Chooses the best ingredient
     """
     featurefreq,featuresubset,cuisinedict=decomposdata(dataset) # make the data readable
-    entropy_gain,frequency=entropy(featurefreq,featuresubset,cuisinedict)
-    try:
-        index=np.argmin(entropy_gain[cuisinedict[cuisine]][frequency[cuisinedict[cuisine]]>20])
-    except (ValueError,KeyError):
-        return(1,-10)
-    best_attribute=searchdict(index,featuresubset[cuisinedict[cuisine]])
-    print(best_attribute)
-    return(best_attribute,index)
+    totalfeatures=set()
+    bestgain=0.
+    for i in range(20):
+        totalfeatures=totalfeatures.union(featuresubset[i])
+    for ingredient in pastingredients:
+        totalfeatures.remove(ingredient)
+    for ingredient in totalfeatures:
+        entro=entropy(dataset,ingredient,cuisine)
+        if (bestgain>entro):
+            bestgain=entro
+            best_ingredient=ingredient
+    print(best_ingredient)
+    return(best_ingredient,bestgain)
 #%%
-def entropygain(dataset,attribute,cuisine):
+def entropy(dataset,attribute,cuisine):
+    positivein=0.
+    negativein=0.
+    positiveout=0.
+    negativeout=0.
+    entro=np.zeros(2)
     if dataset==[]:
         return(0)
     else:
         for recipe in dataset:
-            if (attribute in recipe['ingredient'] and recipe['cuisine']==cuisine):
+            if (attribute in recipe['ingredients'] and recipe['cuisine']==cuisine):
                 positivein+=1.
-            if (attribute in recipe['ingredient'] and recipe['cuisine']!=cuisine):
+            if (attribute in recipe['ingredients'] and recipe['cuisine']!=cuisine):
                 negativein+=1.
-            if (not(attribute in recipe['ingredient']) and recipe['cuisine']==cuisine):
+            if (not(attribute in recipe['ingredients']) and recipe['cuisine']==cuisine):
                 positiveout+=1.
-            if (not(attribute in recipe['ingredient']) and recipe['cuisine']!=cuisine):
+            if (not(attribute in recipe['ingredients']) and recipe['cuisine']!=cuisine):
                 negativeout+=1.
         p_positive=positivein/(positivein+negativein)
         p_negative=negativein/(positivein+negativein)
-        entropy[0]= -p_positive*np.log(p_positive)-p_negatif*np.log(p_negatif))
+        entro[0]= -p_positive*np.log(p_positive)-p_negative*np.log(p_negative)
         p_positive=positiveout/(positiveout+negativeout)
         p_negative=negativeout/(positiveout+negativeout)
-        entropy[1]= -p_positive*np.log(p_positive)-p_negatif*np.log(p_negatif))
-        entropy[np.isnan(entropy)]=0.
-        gen_entropy=entropy[0]*(positivein+negativein)/len(dataset) \
-        +entropy[1]*(positiveout+negativeout)/len(dataset)
+        entro[1]= -p_positive*np.log(p_positive)-p_negative*np.log(p_negative)
+        entro[np.isnan(entro)]=0.
+        print(entro)
+        gen_entropy=entro[0]*(positivein+negativein)/len(dataset) \
+        +entro[1]*(positiveout+negativeout)/len(dataset)
     return(gen_entropy)
 
 #%%
@@ -219,7 +230,13 @@ def majorityvote(dataset,cuisine):
 trainingdata = open("train.json")
 examples = json.load(trainingdata)
 cuisine='italian'
-tree=subtree(examples,cuisine)
+# clean the dataset
+featurefreq,featuresubset,cuisinedict=decomposdata(examples)
+cleanexamples=deepcopy(examples)
+for recipe in examples:
+    if  len(set(featuresubset[cuisinedict[cuisine]]).intersection(set(recipe['ingredients'])))==0:
+        cleanexamples.remove(recipe)
+tree=subtree(cleanexamples,cuisine)
 error=0.
 for recipe in examples:
     pred=predict_one(recipe,tree)
