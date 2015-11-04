@@ -13,17 +13,29 @@ import json
 from cs578project import *
 #%%
 def predict_one(recipe,tree,neveringredients=[]):
-    for ingredient in recipe['ingredients']:
-        if ingredient in neveringredient:
-            return(0.)
     currentnode=tree
+    depth=0
     while not(isinstance(currentnode,float) or isinstance(currentnode,int) ):
         attribute=currentnode[0]
         if attribute in recipe['ingredients']:
             currentnode=currentnode[1]
         else:
             currentnode=currentnode[2]
-    return(currentnode)
+        depth+=1
+    return(currentnode,depth)
+#%%
+def predict_all(recipe,majortree,neveringredients=[]):
+    result=np.zeros((2,20))
+    for i, tree in enumerate(majortree):
+        result[i]=predict_one(recipe,tree)
+    if (np.sum(result[0,:])==1):
+        return(np.argmax(result[0,:]))
+    elif (np.sum(result[0,:])==0):
+        print('Nobody claimed it, return italian')
+        return(19)
+    elif (np.sum(result[0,:])>1.):
+        return(np.argmin(result[1,result[0,:]==1]))
+
 #%%
 def generalentropy(featurefreq,featuresubset,cuisinedict):
     """
@@ -265,7 +277,7 @@ def majorityvote(dataset,cuisine):
 #%%
 
         ## Test
-majortree=np.empty(20,dtype='object')
+#majortree=np.empty(20,dtype='object')
 trainingdata = open("train.json")
 examples = json.load(trainingdata)
 featurefreq,featuresubset,cuisinedict=decomposdata(examples)
@@ -280,7 +292,7 @@ for i,cuisine in enumerate(cuisines):
     for ingredient in featuresubset[cuisinedict[cuisine]]:
         if (featurefreq[cuisinedict[cuisine]][featuresubset[cuisinedict[cuisine]][ingredient]]<5) :
             pastingredients+=[ingredient]
-    majortree[i]=subtree(examples,cuisine,pastingredients)
+#    majortree[i]=subtree(examples,cuisine,pastingredients)
 error=0.
 for recipe in examples:
     pred=predict_all(recipe,majortree)
