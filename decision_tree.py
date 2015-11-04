@@ -222,8 +222,13 @@ def entropy(dataset,attribute,cuisine):
         p_positive=positivein/(positivein+negativein)
         p_negative=negativein/(positivein+negativein)
         entro[0]= -p_positive*np.log(p_positive)-p_negative*np.log(p_negative)
-        p_positive=positiveout/(positiveout+negativeout)
-        p_negative=negativeout/(positiveout+negativeout)
+        try:
+            p_positive=positiveout/(positiveout+negativeout)
+            p_negative=negativeout/(positiveout+negativeout)
+        except ZeroDivisionError:
+            p_positive=0.5
+            p_negative=0.5
+            print('WARNING: this ingredient is everywhere ! Might want to be more selective')
         entro[1]= -p_positive*np.log(p_positive)-p_negative*np.log(p_negative)
         entro[np.isnan(entro)]=0.
         print(entro)
@@ -258,18 +263,27 @@ def majorityvote(dataset,cuisine):
     else:
         return(0.)
 #%%
+
         ## Test
+majortree=np.empty(20,dtype='object')
 trainingdata = open("train.json")
 examples = json.load(trainingdata)
-cuisine='italian'
-# clean the dataset
-featurefreq,featuresubset,cuisinedict=decomposdata(examples[:100])
-pastingredients=firstpass(examples,cuisine)
-neveringredient=deepcopy(pastingredients)
-tree=subtree(examples,cuisine,pastingredients)
+featurefreq,featuresubset,cuisinedict=decomposdata(examples)
+cuisines=list(cuisinedict)
+comingredients=set()
+for subset in featuresubset:
+    comingredients=set.intersection(comingredients,subset)
+for i,cuisine in enumerate(cuisines):
+    # clean the dataset
+    pastingredients=list(comingredients)
+
+    for ingredient in featuresubset[cuisinedict[cuisine]]:
+        if (featurefreq[cuisinedict[cuisine]][featuresubset[cuisinedict[cuisine]][ingredient]]<5) :
+            pastingredients+=[ingredient]
+    majortree[i]=subtree(examples,cuisine,pastingredients)
 error=0.
 for recipe in examples:
-    pred=predict_one(recipe,tree,neveringredient)
+    pred=predict_all(recipe,majortree)
     if (int(pred)==1 and recipe['cuisine']!=cuisine):
         print('negative error' )
         error+=1
