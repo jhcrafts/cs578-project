@@ -12,7 +12,10 @@ import numpy as np
 import json
 from cs578project import *
 #%%
-def predict_one(recipe,tree):
+def predict_one(recipe,tree,neveringredients=[]):
+    for ingredient in recipe['ingredients']:
+        if ingredient in neveringredient:
+            return(0.)
     currentnode=tree
     while not(isinstance(currentnode,float) or isinstance(currentnode,int) ):
         attribute=currentnode[0]
@@ -21,7 +24,7 @@ def predict_one(recipe,tree):
         else:
             currentnode=currentnode[2]
     return(currentnode)
-##%%
+#%%
 def generalentropy(featurefreq,featuresubset,cuisinedict):
     """
     Computes the entropy for every ingredient the smaller the entropy the more
@@ -102,7 +105,7 @@ def decomposdata(examples):
             featurefreq[cuisine][featuresubset[cuisine][ingredient]]+=1.
     return(featurefreq,featuresubset,cuisinedict)
 #%%
-def subtree(dataset,cuisine,pastingredients=[],max_depth=9,mingain=-1):
+def subtree(dataset,cuisine,pastingredients=[],max_depth=0,mingain=-1):
     """
     Fundamental dexision tree learning function
     inputs:
@@ -116,29 +119,38 @@ def subtree(dataset,cuisine,pastingredients=[],max_depth=9,mingain=-1):
         #make sure the dataset is not empty (I can't imagine this happening in practise)
         return(0.)
     else:
-        tree=np.empty(3,dtype='object') #node
-        ingredient,gain=best_choice(dataset,pastingredients,cuisine)
-        if ingredient==1:
-            return(0)
-        # choice of the ingredient
-        tree[0]=ingredient
-        #split the dataset
-        datasetwith,datasetwithout=split(dataset,ingredient)
-        pastingredients+=[ingredient]
-        datasets=np.empty(2,dtype='object')
-        datasets[0]=datasetwith
-        datasets[1]=datasetwithout
-        for i,data in enumerate(datasets):
-            #stopping condition
-            if(len(pastingredients)>max_depth):
-                tree[i+1]=majorityvote(data,cuisine)
-            elif (data==[]):
-                tree[i+1]=majorityvote(dataset,cuisine)
-            elif(gain<=mingain):
-                tree[i+1]=majorityvote(dataset,cuisine)
-            else:
-                #extra iteration
-                tree[i+1]=subtree(data,cuisine,pastingredients,max_depth)
+        count=0
+        for recipe in dataset:
+            if recipe['cuisine']==cuisine:
+                count+=1
+        if count==0:
+            return(0.)
+        if count==len(dataset):
+            return(1.)
+        else:
+            tree=np.empty(3,dtype='object') #node
+            ingredient,gain=best_choice(dataset,pastingredients,cuisine)
+            if ingredient==1:
+                    return(0)
+            # choice of the ingredient
+            tree[0]=ingredient
+            #split the dataset
+            datasetwith,datasetwithout=split(dataset,ingredient)
+            pastingredients+=[ingredient]
+            datasets=np.empty(2,dtype='object')
+            datasets[0]=datasetwith
+            datasets[1]=datasetwithout
+            for i,data in enumerate(datasets):
+                #stopping condition
+                if(max_depth>2):
+                    tree[i+1]=majorityvote(data,cuisine)
+                elif (data==[]):
+                    tree[i+1]=majorityvote(dataset,cuisine)
+                elif(gain<=mingain):
+                    tree[i+1]=majorityvote(dataset,cuisine)
+                else:
+                    #extra iteration
+                    tree[i+1]=subtree(data,cuisine,pastingredients,max_depth+1)
     return(tree)
 
 #%%
@@ -155,19 +167,39 @@ def best_choice(dataset,pastingredients,cuisine):
     Chooses the best ingredient
     """
     featurefreq,featuresubset,cuisinedict=decomposdata(dataset) # make the data readable
-    totalfeatures=set()
-    bestgain=0.
-    for i in range(20):
-        totalfeatures=totalfeatures.union(featuresubset[i])
+    bestgain=10000.
+    best_ingredient=0.
+    i=cuisinedict[cuisine]
+    totalfeatures=set(featuresubset[i])
     for ingredient in pastingredients:
-        totalfeatures.remove(ingredient)
+        try:
+            totalfeatures.remove(ingredient)
+        except KeyError:
+            pass
+    print(totalfeatures)
     for ingredient in totalfeatures:
-        entro=entropy(dataset,ingredient,cuisine)
-        if (bestgain>entro):
-            bestgain=entro
+        entropy_gen,entro=entropy(dataset,ingredient,cuisine)
+        if (bestgain>entropy_gen):
+            bestgain=entropy_gen
             best_ingredient=ingredient
     print(best_ingredient)
     return(best_ingredient,bestgain)
+#%%
+def firstpass(dataset,cuisine):
+    """
+    Gives the ingredient that very unlikely in this cuisine
+    """
+    featurefreq,featuresubset,cuisinedict=decomposdata(dataset) # make the data readable
+    totalfeatures=set()
+    pastingredients=[]
+    for i in range(20):
+        totalfeatures=totalfeatures.union(featuresubset[i])
+    for ingredient in totalfeatures:
+        entropy_gen,entro=entropy(dataset,ingredient,cuisine)
+        print(entro)
+        if (entro[0]==0):
+            pastingredients+=[ingredient]
+    return(pastingredients)
 #%%
 def entropy(dataset,attribute,cuisine):
     positivein=0.
@@ -197,7 +229,7 @@ def entropy(dataset,attribute,cuisine):
         print(entro)
         gen_entropy=entro[0]*(positivein+negativein)/len(dataset) \
         +entro[1]*(positiveout+negativeout)/len(dataset)
-    return(gen_entropy)
+    return(gen_entropy,entro)
 
 #%%
 def split(dataset,ingred):
@@ -231,15 +263,13 @@ trainingdata = open("train.json")
 examples = json.load(trainingdata)
 cuisine='italian'
 # clean the dataset
-featurefreq,featuresubset,cuisinedict=decomposdata(examples)
-cleanexamples=deepcopy(examples)
-for recipe in examples:
-    if  len(set(featuresubset[cuisinedict[cuisine]]).intersection(set(recipe['ingredients'])))==0:
-        cleanexamples.remove(recipe)
-tree=subtree(cleanexamples,cuisine)
+featurefreq,featuresubset,cuisinedict=decomposdata(examples[:100])
+pastingredients=firstpass(examples,cuisine)
+neveringredient=deepcopy(pastingredients)
+tree=subtree(examples,cuisine,pastingredients)
 error=0.
 for recipe in examples:
-    pred=predict_one(recipe,tree)
+    pred=predict_one(recipe,tree,neveringredient)
     if (int(pred)==1 and recipe['cuisine']!=cuisine):
         print('negative error' )
         error+=1
