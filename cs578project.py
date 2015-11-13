@@ -168,10 +168,30 @@ def main():
 
     classifier = algorithms[algorithm]
 
-    # Read in the data file
+    # Read in the data files
     trainingdata = open("train.json")
     trainingexamples = json.load(trainingdata)
-    
+
+    ingredienttokengroups = dict()
+    for example in trainingexamples:
+        for ingredient in example["ingredients"]:
+            tokens = ingredient.split(' ')
+            for token in tokens:
+                if token not in ingredienttokengroups.keys():
+                    ingredienttokengroups[token] = list()
+
+    for example in trainingexamples:
+        for ingredient in example["ingredients"]:
+            tokens = ingredient.split(' ')
+            for token in tokens:
+                for key in ingredienttokengroups.keys():
+                    if ((key.find(token) != -1) or (token.find(key) != -1)):
+                        if ingredient not in ingredienttokengroups[token]:
+                            ingredienttokengroups[token].append(ingredient)
+
+    testdata = open("test.json")
+    testexamples = json.load(testdata)
+
     if (printtrainingstats):
         printtrainingdatastats(trainingexamples)
 
@@ -180,17 +200,22 @@ def main():
     ## FRANCOIS - I think that eventually we might like a common 
     ## routine for extracting features from the training data.  For
     ## the moment, I'm extracting the features that I need for 
-    ## Perceptron OVA in the algorithm routine itself.
-        
+    ## Perceptron OVA in the algorithm routine itself.   
+
+    ## First, let the classifier extract features/labels from the
+    ## Training examples
+    classifier.extractfeatures(trainingexamples)   
+    ## Now, let's build a list of training examples that are
+    ## formatted with this classifier's chosen representation
+    fmt_trainingexamples = list()
+    for example in trainingexamples:
+        fmt_trainingexamples.append(classifier.formatexample(example))
+
     ##### BEGIN Algorithm Execution #####
     pr = cProfile.Profile()
     pr.enable()
-
-    ## FRANCOIS - I've updated this to train the classifier and then we can run
-    ## whatever statistics we want by using the predict routine of the base
-    ## class.  I figured this would be a bit more portable and easy to augment.  
-    classifier.train(trainingexamples)   
-
+    ## Time to train the classifier on the training examples
+    classifier.train(fmt_trainingexamples)
     pr.disable()
     s = StringIO.StringIO()
     sortby = 'cumulative'
@@ -198,10 +223,29 @@ def main():
     print("CLASSIFIER TRAINING RUNTIME STATISTICS:")
     ps.print_stats()
     stats = s.getvalue()
-    ##### END Algorithm Execution #####
+    ##### END Algorithm Execution #####        
+    
+    ## Let's generate some statistics on the training data
+    correct = 0.0
+    total = 0.0
+    for example in fmt_trainingexamples:
+        total += 1
+        if (classifier.label(classifier.predict(example)) == classifier.labelfromexample(example)):
+                correct += 1
+    trainingaccuracy = correct/total
+
+    ## Let's create a test data submission for Kaggle    
+    testsubmission = open("submission.csv",'wb')
+    submissionwriter = csv.writer(testsubmission)
+    submissionwriter.writerow(["id","cuisine"])    
+    for example in testexamples:
+        fmt_example = classifier.formatexample(example)
+        fmt_label = classifier.predict(fmt_example)        
+        submissionwriter.writerow([example["id"], classifier.label(fmt_label)])
+    testsubmission.close()
 
     print("Algorithm:            " + classifier.name())
-    print("Training Accuracy:    " + str(0.0))
+    print("Training Accuracy:    " + str(trainingaccuracy))
 
 if __name__ == '__main__':
     main()

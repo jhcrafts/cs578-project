@@ -27,14 +27,14 @@ class PerceptronBinaryClassifier:
             for example in examplevectors:
                 sign = 1 if example[0] == self.mytargetlabel else -1
                 dotproduct = 0.0
-                for j in range(1,len(example),1):
-                    dotproduct += self.weights[example[j]]
+                for index in example[1]:
+                    dotproduct += self.weights[index]
                 if (sign*(dotproduct + self.bias) <= 0):
                     # mistake!
                     exampleswithoutmistake = 0
-                    for k in range(1,len(example),1):
-                        self.weights[example[k]] += sign
-                        self.cachedweights[example[k]] += (sign*self.c)
+                    for index in example[1]:
+                        self.weights[index] += sign
+                        self.cachedweights[index] += (sign*self.c)
                     self.bias += sign
                     self.cachedbias += self.c*sign
                 else:
@@ -48,8 +48,8 @@ class PerceptronBinaryClassifier:
 
     def predict(self, example):        
         dotproduct = 0.0
-        for i in range(1,len(example),1):
-            dotproduct += self.weights[example[i]]
+        for index in example[1]:
+            dotproduct += self.weights[index]
         dotproduct += self.bias
         return dotproduct
 
@@ -62,47 +62,50 @@ class PerceptronBinaryClassifier:
 class AlgPerceptronOVA(algorithm.Algorithm):
     "Implementation of Perceptron One vs. All Classifier with base class 'algorithm'"
     binaryclassifiers = list()
-
-    def train(self, trainingexamples):
-        ## create a set of all of the labels
-        ## create a set of all of the ingredients
-        cuisines = dict()
+    cuisines = dict()
+    labels = dict()    
+    ingredients = dict()
+    
+          
+    def extractfeatures(self,trainingexamples):
+        ingredientindex = 0 
         cuisineindex = 0
-        ingredients = dict()
-        ingredientindex = 0
-        examplevectors = list()
-        for example in trainingexamples:            
-            examplevector = list()
+        for example in trainingexamples:
             try: 
-                cindex = cuisines[example["cuisine"]]
+                cindex = AlgPerceptronOVA.cuisines[example["cuisine"]]                
             except KeyError:
                 cindex = cuisineindex
-                cuisines[example["cuisine"]] = cindex                
-                cuisineindex += 1
-            examplevector.append(cindex)                
+                AlgPerceptronOVA.cuisines[example["cuisine"]] = cindex                
+                AlgPerceptronOVA.labels[cindex] = example["cuisine"]
+                cuisineindex += 1                            
             for ingredient in example["ingredients"]: 
                 try: 
-                    iindex = ingredients[ingredient]
+                    iindex = AlgPerceptronOVA.ingredients[ingredient]
                 except KeyError:
                     iindex = ingredientindex
-                    ingredients[ingredient] = iindex
+                    AlgPerceptronOVA.ingredients[ingredient] = iindex
                     ingredientindex += 1
-                examplevector.append(iindex)
-            examplevectors.append(examplevector)
+        
+    def formatexample(self,example):
+        try:
+            label = AlgPerceptronOVA.cuisines[example["cuisine"]]
+        except KeyError:
+            label = None
+        featurevector = list()
+        for ingredient in example["ingredients"]:
+            try:
+                featurevector.append(AlgPerceptronOVA.ingredients[ingredient])
+            except KeyError:
+                pass   
+        return [label,featurevector]
+
+    def train(self, trainingexamples):        
         ## create a classifier for each label
-        for cuisine in cuisines.keys():
-            AlgPerceptronOVA.binaryclassifiers.append(PerceptronBinaryClassifier(cuisines[cuisine], len(ingredients),cuisine))
+        for cuisine in AlgPerceptronOVA.cuisines.keys():
+            AlgPerceptronOVA.binaryclassifiers.append(PerceptronBinaryClassifier(AlgPerceptronOVA.cuisines[cuisine], len(AlgPerceptronOVA.ingredients),cuisine))
         ## train each classifier on every example
         for classifier in AlgPerceptronOVA.binaryclassifiers:
-            classifier.trainclassifier(examplevectors,10)        
-
-        correct = 0.0
-        total = 0.0
-        for example in examplevectors:
-            total += 1
-            if (example[0] == AlgPerceptronOVA.predict(self,example)):
-                correct += 1
-        print("Accuracy:  " + str(correct/total))
+            classifier.trainclassifier(trainingexamples,30)        
 
     def predict(self, example):
         results = list()        
@@ -114,6 +117,16 @@ class AlgPerceptronOVA(algorithm.Algorithm):
 
     def name(self):
         return "Perceptron One vs. All"
+
+    def label(self, fmt_label):
+        return AlgPerceptronOVA.labels[fmt_label]
+
+    def description(self):
+        pass
+        
+    def labelfromexample(self,fmt_example):
+        return self.label(fmt_example[0])
+
 
 def resultcompare(x,y):
     return -1 if (x[0] - y[0]) > 0.0 else 1 

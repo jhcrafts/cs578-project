@@ -8,6 +8,7 @@ python cs578project.py <args>
 
 #Program Arguments
 -f    Force Extraction of Feature Data
+-d	  Print Training Data Properties
 -a    Algorithm 
       1 Perceptron One Vs. All
       2 Decision Tree
