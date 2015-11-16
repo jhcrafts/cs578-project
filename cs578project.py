@@ -14,6 +14,7 @@ import os
 
 import alg_perceptronOVA as PerceptronOVA
 import alg_decisiontree as DecisionTree
+import alg_gradientdescentOVA as GradientDescentOVA
 
 def entropy(featurefreq,featuresubset,cuisinedict):
 
@@ -142,7 +143,7 @@ def parseArgs(args):
 def validateInput(args):
     args_map = parseArgs(args)
 
-    algorithm = 1 # 1: Perceptron OVA, 2: Decision Tree    
+    algorithm = 3 # 1: Perceptron OVA, 2: Decision Tree, 3: Gradient Descent OVA    
     forcefeatureextraction = False
     printtrainingdatastats = False    
 
@@ -153,7 +154,7 @@ def validateInput(args):
     if '-d' in args_map:
       printtrainingdatastats = True
 
-    assert algorithm in [1, 2]
+    assert algorithm in [1, 2, 3]
 
     return [algorithm, forcefeatureextraction, printtrainingdatastats]
 
@@ -163,7 +164,8 @@ def main():
     # 1: Perceptron OVA, 2: Decision Tree  
     algorithms = { 
         1 : PerceptronOVA.AlgPerceptronOVA(), 
-        2 : DecisionTree.AlgDecisionTree() 
+        2 : DecisionTree.AlgDecisionTree(),
+        3 : GradientDescentOVA.AlgGradientDescentOVA() 
         }
 
     classifier = algorithms[algorithm]
@@ -171,23 +173,6 @@ def main():
     # Read in the data files
     trainingdata = open("train.json")
     trainingexamples = json.load(trainingdata)
-
-    ingredienttokengroups = dict()
-    for example in trainingexamples:
-        for ingredient in example["ingredients"]:
-            tokens = ingredient.split(' ')
-            for token in tokens:
-                if token not in ingredienttokengroups.keys():
-                    ingredienttokengroups[token] = list()
-
-    for example in trainingexamples:
-        for ingredient in example["ingredients"]:
-            tokens = ingredient.split(' ')
-            for token in tokens:
-                for key in ingredienttokengroups.keys():
-                    if ((key.find(token) != -1) or (token.find(key) != -1)):
-                        if ingredient not in ingredienttokengroups[token]:
-                            ingredienttokengroups[token].append(ingredient)
 
     testdata = open("test.json")
     testexamples = json.load(testdata)
