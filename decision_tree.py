@@ -27,12 +27,12 @@ def predict_one(recipe,tree,neveringredients=[]):
 def predict_all(recipe,majortree,neveringredients=[]):
     result=np.zeros((2,20))
     for i, tree in enumerate(majortree):
-        result[i]=predict_one(recipe,tree)
+        result[:,i]=predict_one(recipe,tree)
     if (np.sum(result[0,:])==1):
         return(np.argmax(result[0,:]))
     elif (np.sum(result[0,:])==0):
-        print('Nobody claimed it, return italian')
-        return(19)
+        #print('Nobody claimed it, return italian')
+        return(17)
     elif (np.sum(result[0,:])>1.):
         return(np.argmin(result[1,result[0,:]==1]))
 
@@ -154,7 +154,7 @@ def subtree(dataset,cuisine,pastingredients=[],max_depth=0,mingain=-1):
             datasets[1]=datasetwithout
             for i,data in enumerate(datasets):
                 #stopping condition
-                if(max_depth>2):
+                if(max_depth>3):
                     tree[i+1]=majorityvote(data,cuisine)
                 elif (data==[]):
                     tree[i+1]=majorityvote(dataset,cuisine)
@@ -274,10 +274,14 @@ def majorityvote(dataset,cuisine):
         return(1.)
     else:
         return(0.)
+def makesubmission(majortree):
+    testdata = open("test.json")
+    for recipe in examples:
+        pred=predict_all(recipe,majortree)
 #%%
 
         ## Test
-#majortree=np.empty(20,dtype='object')
+majortree=np.empty(20,dtype='object')
 trainingdata = open("train.json")
 examples = json.load(trainingdata)
 featurefreq,featuresubset,cuisinedict=decomposdata(examples)
@@ -290,16 +294,17 @@ for i,cuisine in enumerate(cuisines):
     pastingredients=list(comingredients)
 
     for ingredient in featuresubset[cuisinedict[cuisine]]:
-        if (featurefreq[cuisinedict[cuisine]][featuresubset[cuisinedict[cuisine]][ingredient]]<5) :
+        if (featurefreq[cuisinedict[cuisine]][featuresubset[cuisinedict[cuisine]][ingredient]]<3) :
             pastingredients+=[ingredient]
-#    majortree[i]=subtree(examples,cuisine,pastingredients)
+    majortree[i]=subtree(examples,cuisine,pastingredients)
+np.save("Treedeep.npy",majortree)
 error=0.
+missed=0.
 for recipe in examples:
     pred=predict_all(recipe,majortree)
-    if (int(pred)==1 and recipe['cuisine']!=cuisine):
-        print('negative error' )
-        error+=1
-    if (int(pred)==0 and recipe['cuisine']==cuisine):
-        print('positive error' )
-        error+=1
-print('error:',error*1./len(examples))
+    if pred<22:
+        if cuisines[pred]!=recipe['cuisine']:
+            error+=1
+    else:
+        missed+=1
+print(error)
