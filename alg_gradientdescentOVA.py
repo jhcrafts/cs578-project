@@ -17,6 +17,8 @@ class GradientDescentBinaryClassifier:
    
     def trainclassifier(self, examplevectors, maxiterations):        
         regularizer = GradientDescentBinaryClassifier.l1reg #GradientDescentBinaryClassifier.l2reg                        
+        trainingaccuracy = list()
+        nonzerolossexamples = list()
         for i in range(maxiterations):
             g = [0.0]*len(self.weights);
             gb = 0.0
@@ -36,13 +38,14 @@ class GradientDescentBinaryClassifier:
                 #Calculate Training Accuracy Inline - This saves computation effort          
                 if (sign*(dotproduct + self.bias)) > 0.0:
                     correct += 1  
-                total += 1
-            if ((correct/total > 0.95) and (n/total > 0.80)):
-                break           
+                total += 1                            
+            trainingaccuracy.append(correct/total)
+            nonzerolossexamples.append(n/total)
             for k in range(len(g)):
                 g[k] = g[k] - regularizer(self,self.weights[k], GradientDescentBinaryClassifier.lmbd)
                 self.weights[k] = self.weights[k] + GradientDescentBinaryClassifier.stepsize*g[k]
             self.bias = self.bias + GradientDescentBinaryClassifier.stepsize*gb        
+        print(str(self.mytargetlabel) + "," + str(trainingaccuracy) + "," + str(nonzerolossexamples))        
         return    
     
     def l1reg(self,weight,lmbd):
