@@ -9,7 +9,10 @@ import copy
 import random
 import json
 import numpy as np
+import csv
+import os
 
+##<<<<<<< HEAD
 ### main
 ### ----
 ### The main program loop
@@ -45,7 +48,7 @@ def validateInput(args):
     if '-d' in args_map:
       printtrainingdatastats = True
 
-    assert algorithm in [1, 2]
+    assert algorithm in [1, 2,3]
 
     return [algorithm, forcefeatureextraction, printtrainingdatastats]
 ##
@@ -75,7 +78,14 @@ def validateInput(args):
 ##    def features(self):
 ##        return self.featureValues
 ##
+
 #%%
+#=======
+import alg_perceptronOVA as PerceptronOVA
+import alg_decisiontree as DecisionTree
+import alg_gradientdescentOVA as GradientDescentOVA
+
+##>>>>>>> 195d547a236ffc307992e30f92a88d305a89694b
 def entropy(featurefreq,featuresubset,cuisinedict):
     """
     Computes the entropy for every ingredient the smaller the entropy the more
@@ -196,21 +206,117 @@ def printtrainingdatastats(examples):
     featurefreq,featuresubset,cuisinedict=completestat(examples)
     entr,entrdict=entropy(featurefreq,featuresubset,cuisinedict)
 
+### main
+### ----
+### The main program loop
+### You should modify this function to run your experiments
+##
+def parseArgs(args):
+  """Parses arguments vector, looking for switches of the form -key {optional value}.
+  For example:
+	parseArgs([ 'template.py', '-a', 1, '-i', 10, '-f', 1 ]) = {'-t':1, '-i':10, '-f':1 }"""
+  args_map = {}
+  curkey = None
+  for i in xrange(1, len(args)):
+    if args[i][0] == '-':
+      args_map[args[i]] = True
+      curkey = args[i]
+    else:
+      assert curkey
+      args_map[curkey] = args[i]
+      curkey = None
+  return args_map
+
+def validateInput(args):
+    args_map = parseArgs(args)
+
+    algorithm = 2 # 1: Perceptron OVA, 2: Decision Tree, 3: Gradient Descent OVA
+    forcefeatureextraction = False
+    printtrainingdatastats = False
+
+    if '-a' in args_map:
+      algorithm = int(args_map['-a'])
+    if '-f' in args_map:
+      forcefeatureextraction = True
+    if '-d' in args_map:
+      printtrainingdatastats = True
+
+    assert algorithm in [1, 2, 3]
+
+    return [algorithm, forcefeatureextraction, printtrainingdatastats]
 
 def main():
     arguments = validateInput(sys.argv)
     algorithm,featurextraction,printtrainingstats = arguments
+    # 1: Perceptron OVA, 2: Decision Tree
+    algorithms = {
+        1 : PerceptronOVA.AlgPerceptronOVA(),
+        2 : DecisionTree.AlgDecisionTree(),
+        3 : GradientDescentOVA.AlgGradientDescentOVA()
+        }
 
-    # Read in the data file
+    classifier = algorithms[algorithm]
+
+    # Read in the data files
     trainingdata = open("train.json")
-    examples = json.load(trainingdata)
+    trainingexamples = json.load(trainingdata)
+
+    testdata = open("test.json")
+    testexamples = json.load(testdata)
 
     if (printtrainingstats):
-        printtrainingdatastats(examples)
+        printtrainingdatastats(trainingexamples)
 
-    # ====================================
-    # WRITE CODE FOR YOUR EXPERIMENTS HERE
-    # ====================================
+    import cProfile, pstats, StringIO
+
+    ## FRANCOIS - I think that eventually we might like a common
+    ## routine for extracting features from the training data.  For
+    ## the moment, I'm extracting the features that I need for
+    ## Perceptron OVA in the algorithm routine itself.
+
+    ## First, let the classifier extract features/labels from the
+    ## Training examples
+    classifier.extractfeatures(trainingexamples)
+    ## Now, let's build a list of training examples that are
+    ## formatted with this classifier's chosen representation
+    fmt_trainingexamples = list()
+    for example in trainingexamples:
+        fmt_trainingexamples.append(classifier.formatexample(example))
+    ##### BEGIN Algorithm Execution #####
+    pr = cProfile.Profile()
+    pr.enable()
+    ## Time to train the classifier on the training examples
+    classifier.train(fmt_trainingexamples)
+    pr.disable()
+    s = StringIO.StringIO()
+    sortby = 'cumulative'
+    ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+    print("CLASSIFIER TRAINING RUNTIME STATISTICS:")
+    ps.print_stats()
+    stats = s.getvalue()
+    ##### END Algorithm Execution #####
+
+    ## Let's generate some statistics on the training data
+    correct = 0.0
+    total = 0.0
+    for example in fmt_trainingexamples:
+        total += 1
+        if (classifier.label(classifier.predict(example)) == classifier.labelfromexample(example)):
+                correct += 1
+    trainingaccuracy = correct/total
+
+    ## Let's create a test data submission for Kaggle
+    testsubmission = open("submission.csv",'wb')
+    submissionwriter = csv.writer(testsubmission)
+    submissionwriter.writerow(["id","cuisine"])
+    for example in testexamples:
+        fmt_example = classifier.formatexample(example)
+        fmt_label = classifier.predict(fmt_example)
+        submissionwriter.writerow([example["id"], classifier.label(fmt_label)])
+    testsubmission.close()
+
+    print("Algorithm:            " + classifier.name())
+    print("Training Accuracy:    " + str(trainingaccuracy))
 
 if __name__ == '__main__':
     main()

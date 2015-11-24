@@ -11,6 +11,7 @@ from copy import *
 import numpy as np
 import json
 from cs578project import *
+
 #%%
 def predict_one(recipe,tree,neveringredients=[]):
     currentnode=tree
@@ -274,6 +275,7 @@ def majorityvote(dataset,cuisine):
         return(1.)
     else:
         return(0.)
+
 def makesubmission(majortree):
     testdata = open("test.json")
     for recipe in examples:
