@@ -174,6 +174,13 @@ def main():
     trainingdata = open("train.json")
     trainingexamples = json.load(trainingdata)
 
+    import jc_features as fc
+    print("DIRTY INGREDIENTS")
+    #fc.generatefeaturestats(trainingexamples)
+    cleanexamples = fc.cleanfeatureset(trainingexamples)
+    fc.runclusterroutine(cleanexamples)
+    return
+
     testdata = open("test.json")
     testexamples = json.load(testdata)
 
