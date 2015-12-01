@@ -33,12 +33,12 @@ class BinAdaboost:
             for i in range(Nclassi):
                 bestIngredient=[None]*2
                 bestIngredient[1]=0.
-                for ingredient in featuresubset[cuisinedict[cuisine]]:
+                for ingredient in featuresubset[cuisinedict[self.cuisine]]:
                     accuracy=0
                     for j,recipe in enumerate(dataset):
-                        if (ingredient in recipe['ingredients'] and recipe['cuisine']==cuisine):
+                        if (ingredient in recipe['ingredients'] and recipe['cuisine']==self.cuisine):
                             accuracy+=distribution[j]
-                        elif (not(ingredient in recipe['ingredients']) and not(recipe['cuisine']==cuisine)):
+                        elif (not(ingredient in recipe['ingredients']) and not(recipe['cuisine']==self.cuisine)):
                             accuracy+=distribution[j]
                     if accuracy>bestIngredient[1]:
                         bestIngredient[0]=ingredient
@@ -49,9 +49,9 @@ class BinAdaboost:
                 # Update the distribution
                 distribution=distribution*exp(-alpha)
                 for j,recipe in enumerate(dataset):
-                    if (ingredient in recipe['ingredients'] and recipe['cuisine']==cuisine):
+                    if (ingredient in recipe['ingredients'] and recipe['cuisine']==self.cuisine):
                         distribution[j]=distribution[j]*exp(2*alpha)
-                    elif (not(ingredient in recipe['ingredients']) and not(recipe['cuisine']==cuisine)):
+                    elif (not(ingredient in recipe['ingredients']) and not(recipe['cuisine']==self.cuisine)):
                         distribution[j]=distribution[j]*exp(2*alpha)
 
                 # Normalize
@@ -131,8 +131,8 @@ class AlgAdaboost(algorithm.Algorithm):
         for cuisine in AlgAdaboost.cuisines.keys():
             AlgAdaboost.binaryclassifiers.append(BinAdaboost(AlgAdaboost.cuisines[cuisine]))
         ## train each classifier on every example
-        for classifier in AlgDecisionTree.binaryclassifiers:
-            classifier.trainclassifier(trainingexamples,maxdepth=0)
+        for classifier in AlgAdaboost.binaryclassifiers:
+            classifier.trainclassifier(trainingexamples,100)
 
     def predict(self, example):
         result=np.zeros(20)

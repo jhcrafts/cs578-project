@@ -84,7 +84,7 @@ def validateInput(args):
 import alg_perceptronOVA as PerceptronOVA
 import alg_decisiontree as DecisionTree
 import alg_gradientdescentOVA as GradientDescentOVA
-
+import alg_adaboost as Adaboost
 ##>>>>>>> 195d547a236ffc307992e30f92a88d305a89694b
 def entropy(featurefreq,featuresubset,cuisinedict):
     """
@@ -230,7 +230,7 @@ def parseArgs(args):
 def validateInput(args):
     args_map = parseArgs(args)
 
-    algorithm = 2 # 1: Perceptron OVA, 2: Decision Tree, 3: Gradient Descent OVA
+    algorithm = 4 # 1: Perceptron OVA, 2: Decision Tree, 3: Gradient Descent OVA
     forcefeatureextraction = False
     printtrainingdatastats = False
 
@@ -241,7 +241,7 @@ def validateInput(args):
     if '-d' in args_map:
       printtrainingdatastats = True
 
-    assert algorithm in [1, 2, 3]
+    assert algorithm in [1, 2, 3,4]
 
     return [algorithm, forcefeatureextraction, printtrainingdatastats]
 
