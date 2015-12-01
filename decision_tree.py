@@ -275,7 +275,6 @@ def majorityvote(dataset,cuisine):
         return(1.)
     else:
         return(0.)
-
 def makesubmission(majortree):
     testdata = open("test.json")
     for recipe in examples:

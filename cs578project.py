@@ -252,7 +252,8 @@ def main():
     algorithms = {
         1 : PerceptronOVA.AlgPerceptronOVA(),
         2 : DecisionTree.AlgDecisionTree(),
-        3 : GradientDescentOVA.AlgGradientDescentOVA()
+        3 : GradientDescentOVA.AlgGradientDescentOVA(),
+        4 : Adaboost.AlgAdaboost()
         }
 
     classifier = algorithms[algorithm]
