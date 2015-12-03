@@ -5,7 +5,13 @@ class AlgDecisionTree(algorithm.Algorithm):
         
     def extractfeatures(self,trainingexamples):
         pass   
-        
+    
+    def exportfeatures(self):
+        pass
+
+    def loadfeatures(self,features):
+        pass
+
     def formatexample(self,example):
         pass 
     

@@ -1,4 +1,4 @@
-import algorithm
+﻿import algorithm
 
 class GradientDescentBinaryClassifier:
     "Gradient Descent Binary Classifier"
@@ -98,6 +98,12 @@ class AlgGradientDescentOVA(algorithm.Algorithm):
                     iindex = ingredientindex
                     AlgGradientDescentOVA.ingredients[ingredient] = iindex
                     ingredientindex += 1
+
+    def exportfeatures(self):
+        pass
+
+    def loadfeatures(self,features):
+        pass
         
     def formatexample(self,example):
         try:

@@ -5,6 +5,9 @@ import numpy
 
 d = enchant.Dict("en_US")
 
+filterlist = ['freshly','fresh','chopped','dried','crumbled','ground','shredded','red','green','black','blue',
+              'orange','purple','yellow','powder','low','sodium','sauce','white','knower','brown','seasoning','juice','slices']
+
 def generatefeaturestats(examples):    
     ingredientdict = dict()
     cuisines = dict()    
@@ -43,7 +46,10 @@ def cleanfeatureset(examples):
     cleanexamples = list()    
     for example in examples:
         cleanexample = dict()
-        cleanexample["cuisine"] = example["cuisine"]       
+        try:
+            cleanexample["cuisine"] = example["cuisine"]       
+        except:
+            pass
         cleanexample["ingredients"] = list()
         for ingredient in example["ingredients"]:
             cleanexample["ingredients"].append(getCleanIngredient(ingredient));
@@ -54,7 +60,7 @@ def getCleanIngredient(phrase):
     tokens = phrase.lower().split(' ')
     cleantokens = ""
     for token in tokens:            
-        if (token != ""):            
+        if (token != "") and token not in filterlist:            
             if not d.check(token):
                 try:
                     correcttoken = d.suggest(token)[0]
@@ -105,8 +111,14 @@ def getingredientvectors(dictionary, ingredients):
         ingredientvectors.append(getingredientembeddedwordvector(dictionary, ingredient))
     return ingredientvectors
 
-def getingredientclusterer(ingredientvectors):        
-    clusterer = nltk.cluster.kmeans.KMeansClusterer(5000,nltk.cluster.euclidean_distance, repeats = 10, avoid_empty_clusters = True)
+def geteuclideaningredientclusterer(ingredientvectors, k, r):        
+    clusterer = nltk.cluster.kmeans.KMeansClusterer(k,nltk.cluster.euclidean_distance, repeats = r, avoid_empty_clusters = True)
+    vectors = [numpy.array(vector) for vector in ingredientvectors]
+    clusters = clusterer.cluster(vectors, True)    
+    return clusterer
+
+def getcosineingredientclusterer(ingredientvectors, k, r):        
+    clusterer = nltk.cluster.kmeans.KMeansClusterer(k,nltk.cluster.cosine_distance, repeats = r, avoid_empty_clusters = True)
     vectors = [numpy.array(vector) for vector in ingredientvectors]
     clusters = clusterer.cluster(vectors, True)    
     return clusterer
@@ -127,7 +139,7 @@ def testclusterer(clusterer, ingredientsvectors, indextoworddictionary):
             for i in range(len(vector)):
                 if vector[i] != 0:
                     output += indextoworddictionary[i]
-            print(output)
+            print(output.encode('ascii', 'ignore'))
         print ("End Cluster")
 
 translation_table = dict.fromkeys(map(ord, '.,!?[]/*\'$&\"'), None)
@@ -145,5 +157,5 @@ def runclusterroutine(examples):
     ingredientlist = getingredientlist(examples)
     word2index,index2word = getwordembeddingdictionaries(examples)
     vectors = getingredientvectors(word2index, ingredientlist)
-    clusterer = getingredientclusterer(vectors)
+    clusterer = geteuclideaningredientclusterer(vectors)
     testclusterer(clusterer, vectors, index2word)

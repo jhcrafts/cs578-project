@@ -143,9 +143,10 @@ def parseArgs(args):
 def validateInput(args):
     args_map = parseArgs(args)
 
-    algorithm = 3 # 1: Perceptron OVA, 2: Decision Tree, 3: Gradient Descent OVA    
+    algorithm = 1 # 1: Perceptron OVA, 2: Decision Tree, 3: Gradient Descent OVA    
     forcefeatureextraction = False
-    printtrainingdatastats = False    
+    printtrainingdatastats = False
+    description = 'default'    
 
     if '-a' in args_map:
       algorithm = int(args_map['-a'])    
@@ -153,14 +154,16 @@ def validateInput(args):
       forcefeatureextraction = True
     if '-d' in args_map:
       printtrainingdatastats = True
+    if '-s' in args_map:
+      description = args_map['-s']
 
     assert algorithm in [1, 2, 3]
 
-    return [algorithm, forcefeatureextraction, printtrainingdatastats]
+    return [algorithm, forcefeatureextraction, printtrainingdatastats, description]
 
 def main():
     arguments = validateInput(sys.argv)
-    algorithm,featurextraction,printtrainingstats = arguments
+    algorithm,featurextraction,printtrainingstats, description = arguments
     # 1: Perceptron OVA, 2: Decision Tree  
     algorithms = { 
         1 : PerceptronOVA.AlgPerceptronOVA(), 
@@ -170,19 +173,50 @@ def main():
 
     classifier = algorithms[algorithm]
 
+    import jc_features as fc
+    import os.path
     # Read in the data files
-    trainingdata = open("train.json")
+    if not os.path.exists("cleantrain.json"):
+        trainingdata = open("train.json")
+        trainingexamples = json.load(trainingdata)
+        cleantrainingdata = open('cleantrain.json','wb')
+        cleantrainingexamples = fc.cleanfeatureset(trainingexamples)
+        json.dump(cleantrainingexamples,cleantrainingdata)
+        cleantrainingdata.flush()
+        cleantrainingdata.close()
+        trainingdata.close()
+   
+    if not os.path.exists("cleantest.json"):
+        testdata = open("test.json")
+        testexamples = json.load(testdata)    
+        cleantestdata = open('cleantest.json','wb')
+        cleantestexamples = fc.cleanfeatureset(testexamples)
+        json.dump(cleantestexamples,cleantestdata)
+        cleantestdata.flush()
+        cleantestdata.close()
+        testdata.close()
+
+    trainingdata = open("cleantrain.json")
     trainingexamples = json.load(trainingdata)
 
-    import jc_features as fc
-    print("DIRTY INGREDIENTS")
-    #fc.generatefeaturestats(trainingexamples)
-    cleanexamples = fc.cleanfeatureset(trainingexamples)
-    fc.runclusterroutine(cleanexamples)
-    return
+    ## generation of k-means classifiers for later use####
+    #import nltk
+    #word2index,index2word = fc.getwordembeddingdictionaries(trainingexamples)
+    #ingredients = fc.getingredientlist(trainingexamples)
+    #vectors = fc.getingredientvectors(word2index, ingredients)
+    #for i in range(1,10):
+    #    try:            
+    #        clusterer = fc.getcosineingredientclusterer(vectors, i*100, 5)
+    #        print("cosine clusterer data:")
+    #        print("k:    " + str(i*100))            
+    #        print("means: " + str(np.array(clusterer.means()).tolist()))
+    #        fc.testclusterer(clusterer,vectors,index2word)            
+    #    except:
+    #        print("exception on cluster generation")
+    #return
 
-    testdata = open("test.json")
-    testexamples = json.load(testdata)
+    testdata = open("cleantest.json")
+    testexamples = json.load(testdata)   
 
     if (printtrainingstats):
         printtrainingdatastats(trainingexamples)
@@ -197,6 +231,7 @@ def main():
     ## First, let the classifier extract features/labels from the
     ## Training examples
     classifier.extractfeatures(trainingexamples)   
+    
     ## Now, let's build a list of training examples that are
     ## formatted with this classifier's chosen representation
     fmt_trainingexamples = list()

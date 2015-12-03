@@ -7,6 +7,14 @@ class Algorithm(object):
     @abstractmethod
     def extractfeatures(self,trainingexamples):
         pass   
+
+    @abstractmethod
+    def exportfeatures(self):
+        pass
+
+    @abstractmethod
+    def loadfeatures(self):
+        pass
     
     @abstractmethod
     def formatexample(self,example):
