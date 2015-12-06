@@ -2,6 +2,7 @@
 import operator
 import nltk
 import numpy
+import copy
 
 d = enchant.Dict("en_US")
 
@@ -45,7 +46,7 @@ def generatefeaturestats(examples):
 def cleanfeatureset(examples):
     cleanexamples = list()    
     for example in examples:
-        cleanexample = dict()
+        cleanexample = copy.deepcopy(example)
         try:
             cleanexample["cuisine"] = example["cuisine"]       
         except:
@@ -121,6 +122,14 @@ def getcosineingredientclusterer(ingredientvectors, k, r):
     clusterer = nltk.cluster.kmeans.KMeansClusterer(k,nltk.cluster.cosine_distance, repeats = r, avoid_empty_clusters = True)
     vectors = [numpy.array(vector) for vector in ingredientvectors]
     clusters = clusterer.cluster(vectors, True)    
+    return clusterer
+
+import jc_means
+def getpredefinedclusterer():
+    means = [numpy.array(mean) for mean in jc_means.euclidean5]
+    clusterer = nltk.cluster.kmeans.KMeansClusterer(500,nltk.cluster.euclidean_distance,repeats = 1, initial_means = means)    
+    if (clusterer.num_clusters != 500):
+        pass
     return clusterer
 
 def testclusterer(clusterer, ingredientsvectors, indextoworddictionary):

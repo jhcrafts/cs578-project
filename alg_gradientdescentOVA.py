@@ -74,54 +74,12 @@ class GradientDescentBinaryClassifier:
 
 class AlgGradientDescentOVA(algorithm.Algorithm):
     "Implementation of Gradient Descent One vs. All Classifier with base class 'algorithm'"
-    binaryclassifiers = list()
-    cuisines = dict()
-    labels = dict()    
-    ingredients = dict()
-    
-          
-    def extractfeatures(self,trainingexamples):
-        ingredientindex = 0 
-        cuisineindex = 0
-        for example in trainingexamples:
-            try: 
-                cindex = AlgGradientDescentOVA.cuisines[example["cuisine"]]                
-            except KeyError:
-                cindex = cuisineindex
-                AlgGradientDescentOVA.cuisines[example["cuisine"]] = cindex                
-                AlgGradientDescentOVA.labels[cindex] = example["cuisine"]
-                cuisineindex += 1                            
-            for ingredient in example["ingredients"]: 
-                try: 
-                    iindex = AlgGradientDescentOVA.ingredients[ingredient]
-                except KeyError:
-                    iindex = ingredientindex
-                    AlgGradientDescentOVA.ingredients[ingredient] = iindex
-                    ingredientindex += 1
+    binaryclassifiers = list()         
 
-    def exportfeatures(self):
-        pass
-
-    def loadfeatures(self,features):
-        pass
-        
-    def formatexample(self,example):
-        try:
-            label = AlgGradientDescentOVA.cuisines[example["cuisine"]]
-        except KeyError:
-            label = None
-        featurevector = list()
-        for ingredient in example["ingredients"]:
-            try:
-                featurevector.append(AlgGradientDescentOVA.ingredients[ingredient])
-            except KeyError:
-                pass   
-        return [label,featurevector]
-
-    def train(self, trainingexamples):        
+    def train(self, trainingexamples, examplevectorlength, labels):        
         ## create a classifier for each label
         for cuisine in AlgGradientDescentOVA.cuisines.keys():
-            AlgGradientDescentOVA.binaryclassifiers.append(GradientDescentBinaryClassifier(AlgGradientDescentOVA.cuisines[cuisine], len(AlgGradientDescentOVA.ingredients),cuisine))
+            AlgGradientDescentOVA.binaryclassifiers.append(GradientDescentBinaryClassifier(cuisine, examplevectorlength,""))
         ## train each classifier on every example
         for classifier in AlgGradientDescentOVA.binaryclassifiers:
             classifier.trainclassifier(trainingexamples,1000)        
@@ -137,15 +95,8 @@ class AlgGradientDescentOVA(algorithm.Algorithm):
     def name(self):
         return "Gradient Descent One vs. All"
 
-    def label(self, fmt_label):
-        return AlgGradientDescentOVA.labels[fmt_label]
-
     def description(self):
         pass
-        
-    def labelfromexample(self,fmt_example):
-        return self.label(fmt_example[0])
-
 
 def resultcompare(x,y):
     return -1 if (x[0] - y[0]) > 0.0 else 1 

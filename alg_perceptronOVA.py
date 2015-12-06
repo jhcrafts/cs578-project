@@ -63,62 +63,15 @@ class PerceptronBinaryClassifier:
 import jc_features as fc
 class AlgPerceptronOVA(algorithm.Algorithm):
     "Implementation of Perceptron One vs. All Classifier with base class 'algorithm'"
-    binaryclassifiers = list()
-    cuisines = dict()
-    labels = dict()    
-    ingredients = dict()
-    clusterer = None
-    word2index = None
-    index2word = None
+    binaryclassifiers = list()  
           
-    def extractfeatures(self,trainingexamples):
-        cuisineindex = 0
-        for example in trainingexamples:
-            try: 
-                cindex = AlgPerceptronOVA.cuisines[example["cuisine"]]                
-            except KeyError:
-                cindex = cuisineindex
-                AlgPerceptronOVA.cuisines[example["cuisine"]] = cindex                
-                AlgPerceptronOVA.labels[cindex] = example["cuisine"]
-                cuisineindex += 1 
-        ingredientlist = fc.getingredientlist(trainingexamples)
-        AlgPerceptronOVA.word2index,AlgPerceptronOVA.index2word = fc.getwordembeddingdictionaries(trainingexamples)
-        vectors = fc.getingredientvectors(AlgPerceptronOVA.word2index, ingredientlist)
-        AlgPerceptronOVA.clusterer = fc.geteuclideaningredientclusterer(vectors, 1000, 10)        
-        #ingredientindex = 0 
-                           
-        #    for ingredient in example["ingredients"]: 
-        #        try: 
-        #            iindex = AlgPerceptronOVA.ingredients[ingredient]
-        #        except KeyError:
-        #            iindex = ingredientindex
-        #            AlgPerceptronOVA.ingredients[ingredient] = iindex
-        #            ingredientindex += 1
-        
-    def exportfeatures(self):
-        pass
-
-    def loadfeatures(self,features):
-        pass
-
-    def formatexample(self,example):
-        try:
-            label = AlgPerceptronOVA.cuisines[example["cuisine"]]
-        except KeyError:
-            label = None
-        featurevector = list()
-        ingredientvectors = fc.getingredientvectors(AlgPerceptronOVA.word2index, example["ingredients"])
-        for ingredientvector in ingredientvectors:
-            featurevector.append(AlgPerceptronOVA.clusterer.classify(ingredientvector))
-        return [label,featurevector]
-
-    def train(self, trainingexamples):        
+    def train(self, trainingexamples, examplevectorlength, labels):        
         ## create a classifier for each label
-        for cuisine in AlgPerceptronOVA.cuisines.keys():
-            AlgPerceptronOVA.binaryclassifiers.append(PerceptronBinaryClassifier(AlgPerceptronOVA.cuisines[cuisine], AlgPerceptronOVA.clusterer.num_clusters(),cuisine))
+        for cuisine in labels:
+            AlgPerceptronOVA.binaryclassifiers.append(PerceptronBinaryClassifier(cuisine, examplevectorlength,""))
         ## train each classifier on every example
         for classifier in AlgPerceptronOVA.binaryclassifiers:
-            classifier.trainclassifier(trainingexamples,10)        
+            classifier.trainclassifier(trainingexamples,40)        
 
     def predict(self, example):
         results = list()        
@@ -130,16 +83,9 @@ class AlgPerceptronOVA(algorithm.Algorithm):
 
     def name(self):
         return "Perceptron One vs. All"
-
-    def label(self, fmt_label):
-        return AlgPerceptronOVA.labels[fmt_label]
-
+            
     def description(self):
-        pass
-        
-    def labelfromexample(self,fmt_example):
-        return self.label(fmt_example[0])
-
+        pass 
 
 def resultcompare(x,y):
     return -1 if (x[0] - y[0]) > 0.0 else 1 

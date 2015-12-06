@@ -2,26 +2,10 @@
 
 class Algorithm(object):
     "Abstract Base Class for Algorithm Classes"
-    __metaclass__ = ABCMeta
-    
-    @abstractmethod
-    def extractfeatures(self,trainingexamples):
-        pass   
+    __metaclass__ = ABCMeta   
 
     @abstractmethod
-    def exportfeatures(self):
-        pass
-
-    @abstractmethod
-    def loadfeatures(self):
-        pass
-    
-    @abstractmethod
-    def formatexample(self,example):
-        pass 
-
-    @abstractmethod
-    def train(self,trainingexamples):
+    def train(self,trainingexamples, examplevectorlength, labels):
         pass
 
     @abstractmethod
@@ -34,15 +18,7 @@ class Algorithm(object):
 
     @abstractmethod
     def description(self):
-        pass
-
-    @abstractmethod
-    def label(self,fmt_label):
-        pass
-
-    @abstractmethod
-    def labelfromexample(self,fmt_example):
-        pass
+        pass  
 
 
 

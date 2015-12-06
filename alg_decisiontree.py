@@ -15,7 +15,7 @@ class AlgDecisionTree(algorithm.Algorithm):
     def formatexample(self,example):
         pass 
     
-    def train(self, trainingexamples):
+    def train(self, trainingexamples, examplevectorlength, labels):
         pass
 
     def predict(self, example):
