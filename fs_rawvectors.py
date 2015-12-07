@@ -1,4 +1,4 @@
-﻿import featureset
+import featureset
 import os
 import json
 
@@ -7,7 +7,7 @@ class FSRawVectors(featureset.FeatureSet):
     cuisines = dict()
     labels = dict()    
     ingredients = dict()
-
+    vectorlength = 0
     fmttrainingexamples = list()
     fmttestexamples = list()
     
@@ -48,7 +48,9 @@ class FSRawVectors(featureset.FeatureSet):
             featuredata["train"] = FSRawVectors.fmttrainingexamples 
             featuredata["test"] = FSRawVectors.fmttestexamples
             featuredata["labels"] = FSRawVectors.labels
-                                                      
+            FSRawVectors.vectorlength = len(FSRawVectors.ingredients.keys())
+            featuredata["vectorlength"] = FSRawVectors.vectorlength
+            
             json.dump(featuredata,featurefile)            
             featurefile.flush()
             featurefile.close()
@@ -58,6 +60,7 @@ class FSRawVectors(featureset.FeatureSet):
             FSRawVectors.fmttrainingexamples = featuredata["train"]
             FSRawVectors.fmttestexamples = featuredata["test"] 
             templabels = featuredata["labels"]
+            FSRawVectors.vectorlength = featuredata["vectorlength"]
             for key in templabels.keys():
                 FSRawVectors.labels[int(key)] = templabels[key]
             featurefile.close()        
@@ -95,7 +98,7 @@ class FSRawVectors(featureset.FeatureSet):
         return FSRawVectors.labels.keys()
 
     def formattedexamplevectorlength(self):
-        return len(FSRawVectors.ingredients.keys())
+        return FSRawVectors.vectorlength
 
     def idfromexample(self,example):
         return example[2]

@@ -1,11 +1,11 @@
-﻿from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod
 
 class Algorithm(object):
     "Abstract Base Class for Algorithm Classes"
     __metaclass__ = ABCMeta   
 
     @abstractmethod
-    def train(self,trainingexamples, examplevectorlength, labels):
+    def train(self,trainingexamples, examplevectorlength, labels, iterations):
         pass
 
     @abstractmethod

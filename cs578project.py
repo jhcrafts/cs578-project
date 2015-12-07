@@ -1,4 +1,4 @@
-﻿# CS578 Project
+# CS578 Project
 # Francois Sanson
 # Jordan Crafts
 
@@ -24,6 +24,8 @@ import fs_kmeans_euclidean1000 as FeatureSetKMeansEuclidean1000
 import fs_kmeans_cosine100 as FeatureSetKMeansCosine100
 import fs_kmeans_cosine500 as FeatureSetKMeansCosine500
 import fs_kmeans_cosine1000 as FeatureSetKMeansCosine1000
+import fs_topingredientbigrams as FeatureSetTopBigrams
+import fs_topingredienttrigrams as FeatureSetTopTrigrams
 
 def entropy(featurefreq,featuresubset,cuisinedict):
 
@@ -153,7 +155,7 @@ def validateInput(args):
     args_map = parseArgs(args)
 
     algorithm = 1 # 1: Perceptron OVA, 2: Decision Tree, 3: Gradient Descent OVA    
-    feature = 3 #1 Raw Feature Vectors
+    feature = 9 #1 Raw Feature Vectors
     iterations = 10 # 10 iterations by default
     forcefeatureextraction = False
     printtrainingdatastats = False
@@ -174,7 +176,7 @@ def validateInput(args):
       submissionname = args_map['-n']
 
     assert algorithm in [1, 2, 3]
-    assert feature in [1,2,3]
+    assert feature in [1,2,3,4,5,6,7,8,9,10]
 
     return [algorithm, feature, iterations, printtrainingdatastats, description, submissionname]
 
@@ -196,7 +198,9 @@ def main():
         5 : FeatureSetKMeansEuclidean1000.FSKMeansEuclidean1000(),
         6 : FeatureSetKMeansCosine100.FSKMeansCosine100(),
         7 : FeatureSetKMeansCosine500.FSKMeansCosine500(),
-        8 : FeatureSetKMeansCosine1000.FSKMeansCosine1000()
+        8 : FeatureSetKMeansCosine1000.FSKMeansCosine1000(),
+        9 : FeatureSetTopBigrams.FSTopIngredientBigramVectors(),
+        10: FeatureSetTopTrigrams.FSTopIngredientTrigramVectors()
         }
 
     classifier = algorithms[algorithm]
@@ -264,7 +268,7 @@ def main():
     pr = cProfile.Profile()
     pr.enable()
     ## Time to train the classifier on the training examples
-    classifier.train(featureset.formattedtrainingexamples(), featureset.formattedexamplevectorlength(), featureset.formattedlabels())
+    classifier.train(featureset.formattedtrainingexamples(), featureset.formattedexamplevectorlength(), featureset.formattedlabels(), iterations)
     pr.disable()
     s = StringIO.StringIO()
     sortby = 'cumulative'

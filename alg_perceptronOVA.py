@@ -1,4 +1,4 @@
-﻿import algorithm
+import algorithm
 import nltk
 
 class PerceptronBinaryClassifier:
@@ -65,13 +65,13 @@ class AlgPerceptronOVA(algorithm.Algorithm):
     "Implementation of Perceptron One vs. All Classifier with base class 'algorithm'"
     binaryclassifiers = list()  
           
-    def train(self, trainingexamples, examplevectorlength, labels):        
+    def train(self, trainingexamples, examplevectorlength, labels, iterations):        
         ## create a classifier for each label
         for cuisine in labels:
             AlgPerceptronOVA.binaryclassifiers.append(PerceptronBinaryClassifier(cuisine, examplevectorlength,""))
         ## train each classifier on every example
         for classifier in AlgPerceptronOVA.binaryclassifiers:
-            classifier.trainclassifier(trainingexamples,40)        
+            classifier.trainclassifier(trainingexamples,iterations)        
 
     def predict(self, example):
         results = list()        

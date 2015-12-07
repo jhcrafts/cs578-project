@@ -1,4 +1,4 @@
-﻿import algorithm
+import algorithm
 
 class AlgDecisionTree(algorithm.Algorithm):
     "Implementation of Decision Tree Classifier with base class 'algorithm'"
@@ -15,7 +15,7 @@ class AlgDecisionTree(algorithm.Algorithm):
     def formatexample(self,example):
         pass 
     
-    def train(self, trainingexamples, examplevectorlength, labels):
+    def train(self, trainingexamples, examplevectorlength, labels, iterations):
         pass
 
     def predict(self, example):

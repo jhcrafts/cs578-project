@@ -1,4 +1,4 @@
-﻿import featureset
+import featureset
 import os
 import json
 
@@ -42,6 +42,8 @@ class FSSpellCheckVectors(featureset.FeatureSet):
             featuredata["train"] = FSSpellCheckVectors.fmttrainingexamples 
             featuredata["test"] = FSSpellCheckVectors.fmttestexamples
             featuredata["labels"] = FSSpellCheckVectors.labels
+            FSSpellCheckVectors.vectorlength = len(FSSpellCheckVectors.ingredients.keys())
+            featuredata["vectorlength"] = FSSpellCheckVectors.vectorlength
                                                       
             json.dump(featuredata,featurefile)            
             featurefile.flush()
@@ -52,6 +54,7 @@ class FSSpellCheckVectors(featureset.FeatureSet):
             FSSpellCheckVectors.fmttrainingexamples = featuredata["train"]
             FSSpellCheckVectors.fmttestexamples = featuredata["test"] 
             templabels = featuredata["labels"]
+            FSSpellCheckVectors.vectorlength = featuredata["vectorlength"]
             for key in templabels.keys():
                 FSSpellCheckVectors.labels[int(key)] = templabels[key]
             featurefile.close()        
@@ -89,7 +92,7 @@ class FSSpellCheckVectors(featureset.FeatureSet):
         return FSSpellCheckVectors.labels.keys()
 
     def formattedexamplevectorlength(self):
-        return len(FSSpellCheckVectors.ingredients.keys())
+        return FSSpellCheckVectors.vectorlength
 
     def idfromexample(self,example):
         return example[2]

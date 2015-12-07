@@ -1,4 +1,4 @@
-﻿import algorithm
+import algorithm
 
 class GradientDescentBinaryClassifier:
     "Gradient Descent Binary Classifier"
@@ -76,13 +76,13 @@ class AlgGradientDescentOVA(algorithm.Algorithm):
     "Implementation of Gradient Descent One vs. All Classifier with base class 'algorithm'"
     binaryclassifiers = list()         
 
-    def train(self, trainingexamples, examplevectorlength, labels):        
+    def train(self, trainingexamples, examplevectorlength, labels, iterations):        
         ## create a classifier for each label
-        for cuisine in AlgGradientDescentOVA.cuisines.keys():
+        for cuisine in labels:
             AlgGradientDescentOVA.binaryclassifiers.append(GradientDescentBinaryClassifier(cuisine, examplevectorlength,""))
         ## train each classifier on every example
         for classifier in AlgGradientDescentOVA.binaryclassifiers:
-            classifier.trainclassifier(trainingexamples,1000)        
+            classifier.trainclassifier(trainingexamples, iterations)        
 
     def predict(self, example):
         results = list()        
