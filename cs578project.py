@@ -1,4 +1,4 @@
-# CS578 Project
+﻿# CS578 Project
 # Francois Sanson
 # Jordan Crafts
 
@@ -26,6 +26,8 @@ import fs_kmeans_cosine500 as FeatureSetKMeansCosine500
 import fs_kmeans_cosine1000 as FeatureSetKMeansCosine1000
 import fs_topingredientbigrams as FeatureSetTopBigrams
 import fs_topingredienttrigrams as FeatureSetTopTrigrams
+import fs_spellcheckandcosine500 as FeatureSetSpellCheckCosine500
+import fs_spellcheckandtrigrams as FeatureSetSpellCheckTrigrams
 
 def entropy(featurefreq,featuresubset,cuisinedict):
 
@@ -155,8 +157,8 @@ def validateInput(args):
     args_map = parseArgs(args)
 
     algorithm = 1 # 1: Perceptron OVA, 2: Decision Tree, 3: Gradient Descent OVA    
-    feature = 9 #1 Raw Feature Vectors
-    iterations = 10 # 10 iterations by default
+    feature = 12 #1 Raw Feature Vectors
+    iterations = 1 # 10 iterations by default
     forcefeatureextraction = False
     printtrainingdatastats = False
     description = 'default'
@@ -176,7 +178,7 @@ def validateInput(args):
       submissionname = args_map['-n']
 
     assert algorithm in [1, 2, 3]
-    assert feature in [1,2,3,4,5,6,7,8,9,10]
+    assert feature in [1,2,3,4,5,6,7,8,9,10,11,12]
 
     return [algorithm, feature, iterations, printtrainingdatastats, description, submissionname]
 
@@ -200,7 +202,9 @@ def main():
         7 : FeatureSetKMeansCosine500.FSKMeansCosine500(),
         8 : FeatureSetKMeansCosine1000.FSKMeansCosine1000(),
         9 : FeatureSetTopBigrams.FSTopIngredientBigramVectors(),
-        10: FeatureSetTopTrigrams.FSTopIngredientTrigramVectors()
+        10: FeatureSetTopTrigrams.FSTopIngredientTrigramVectors(),
+        11: FeatureSetSpellCheckCosine500.FSSpellCheckCosine500(),
+        12: FeatureSetSpellCheckTrigrams.FSSpellCheckTrigrams()
         }
 
     classifier = algorithms[algorithm]

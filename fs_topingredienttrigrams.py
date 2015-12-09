@@ -1,4 +1,4 @@
-import featureset
+﻿import featureset
 import os
 import json
 
@@ -58,7 +58,7 @@ class FSTopIngredientTrigramVectors(featureset.FeatureSet):
                     except KeyError:
                         pass
                 try:
-                    id = FSTopIngredientTrigramVectors.cuisines[example["id"]]
+                    id = example["id"]
                 except KeyError:
                     id = 0
                 jcstestvectors.append([fmtcuisine,fmtingredients,id])
@@ -133,8 +133,7 @@ class FSTopIngredientTrigramVectors(featureset.FeatureSet):
             FSTopIngredientTrigramVectors.fmttestexamples = featuredata["test"] 
             templabels = featuredata["labels"]
             for key in templabels.keys():
-                FSTopIngredientTrigramVectors.labels[int(key)] = templabels[key]
-            FSTopIngredientTrigramVectors.ingredienttupledict = featuredata["ingredienttuples"]
+                FSTopIngredientTrigramVectors.labels[int(key)] = templabels[key]            
             FSTopIngredientTrigramVectors.vectorlength = featuredata["vectorlength"]
             featurefile.close()        
        

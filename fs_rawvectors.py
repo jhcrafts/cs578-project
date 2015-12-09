@@ -1,4 +1,4 @@
-import featureset
+﻿import featureset
 import os
 import json
 
@@ -71,7 +71,7 @@ class FSRawVectors(featureset.FeatureSet):
         except KeyError:
             label = None
         try:
-            id = FSRawVectors.cuisines[example["id"]]
+            id = example["id"]
         except KeyError:
             id = 0
         featurevector = list()

@@ -1,4 +1,5 @@
-import algorithm
+﻿import algorithm
+import math
 
 class GradientDescentBinaryClassifier:
     "Gradient Descent Binary Classifier"
@@ -45,7 +46,15 @@ class GradientDescentBinaryClassifier:
                 g[k] = g[k] - regularizer(self,self.weights[k], GradientDescentBinaryClassifier.lmbd)
                 self.weights[k] = self.weights[k] + GradientDescentBinaryClassifier.stepsize*g[k]
             self.bias = self.bias + GradientDescentBinaryClassifier.stepsize*gb        
-        print(str(self.mytargetlabel) + "," + str(trainingaccuracy) + "," + str(nonzerolossexamples))        
+        print(str(self.mytargetlabel) + "," + str(trainingaccuracy) + "," + str(nonzerolossexamples))
+        magnitude = 0.0
+        for i in range(len(self.weights)):
+            magnitude += math.pow(self.weights[i], 2)
+        magnitude += math.pow(self.bias, 2)
+        if (magnitude != 0.0):
+            for i in range(len(self.weights)):
+                self.weights[i] = self.weights[i]/magnitude
+            self.bias = self.bias/magnitude         
         return    
     
     def l1reg(self,weight,lmbd):
@@ -77,6 +86,7 @@ class AlgGradientDescentOVA(algorithm.Algorithm):
     binaryclassifiers = list()         
 
     def train(self, trainingexamples, examplevectorlength, labels, iterations):        
+        AlgGradientDescentOVA.binaryclassifiers = list()
         ## create a classifier for each label
         for cuisine in labels:
             AlgGradientDescentOVA.binaryclassifiers.append(GradientDescentBinaryClassifier(cuisine, examplevectorlength,""))

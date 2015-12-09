@@ -1,4 +1,4 @@
-import featureset
+﻿import featureset
 import os
 import json
 
@@ -58,7 +58,7 @@ class FSTopIngredientBigramVectors(featureset.FeatureSet):
                     except KeyError:
                         pass
                 try:
-                    id = FSTopIngredientBigramVectors.cuisines[example["id"]]
+                    id = example["id"]
                 except KeyError:
                     id = 0
                 jcstestvectors.append([fmtcuisine,fmtingredients,id])

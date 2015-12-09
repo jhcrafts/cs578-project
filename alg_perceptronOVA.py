@@ -1,5 +1,6 @@
-import algorithm
+﻿import algorithm
 import nltk
+import math
 
 class PerceptronBinaryClassifier:
     "Perceptron Binary Classifier"
@@ -43,9 +44,16 @@ class PerceptronBinaryClassifier:
                 self.c += 1.0
             if (exampleswithoutmistake >= len(examplevectors)):
                 break         
+        magnitude = 0.0
         for i in range(len(self.weights)):
             self.weights[i] = self.weights[i] - self.cachedweights[i]/self.c
-        self.bias = self.bias - (self.cachedbias/self.c)    
+            magnitude += math.pow(self.weights[i], 2)
+        self.bias = self.bias - (self.cachedbias/self.c) 
+        magnitude += math.pow(self.bias, 2)
+        if (magnitude != 0.0):
+            for i in range(len(self.weights)):
+                self.weights[i] = self.weights[i]/magnitude
+            self.bias = self.bias/magnitude                   
 
     def predict(self, example):        
         dotproduct = 0.0
@@ -66,6 +74,7 @@ class AlgPerceptronOVA(algorithm.Algorithm):
     binaryclassifiers = list()  
           
     def train(self, trainingexamples, examplevectorlength, labels, iterations):        
+        AlgPerceptronOVA.binaryclassifiers = list()
         ## create a classifier for each label
         for cuisine in labels:
             AlgPerceptronOVA.binaryclassifiers.append(PerceptronBinaryClassifier(cuisine, examplevectorlength,""))

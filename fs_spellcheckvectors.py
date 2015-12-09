@@ -1,4 +1,4 @@
-import featureset
+﻿import featureset
 import os
 import json
 
@@ -65,7 +65,7 @@ class FSSpellCheckVectors(featureset.FeatureSet):
         except KeyError:
             label = None
         try:
-            id = FSSpellCheckVectors.cuisines[example["id"]]
+            id = example["id"]
         except KeyError:
             id = 0
         featurevector = list()
